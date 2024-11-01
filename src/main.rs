@@ -1,4 +1,4 @@
-use image::{Rgba, RgbaImage};
+use image::{Rgb, RgbaImage};
 use imageproc::drawing::draw_hollow_circle_mut;
 
 use image::RgbImage;
@@ -20,11 +20,41 @@ struct CircleCoordinates {
     color: EasyColor,
 }
 
-fn draw_circles(img: &mut RgbaImage, circle_coordinates_list: &[CircleCoordinates]) {
+use nannou::prelude::*;
+struct Model {}
+
+fn model(_app: &App) -> Model {
+    Model {}
+}
+fn event(_app: &App, _model: &mut Model, _event: Event) {}
+fn view(app: &App, _model: &Model, frame: Frame) {
+    let draw = app.draw();
+
+    // Generate sine wave data based on the time of the app
+    let sine = app.time.sin();
+    let slowersine = (app.time / 2.0).sin();
+
+    // Get boundary of the window (to constrain the movements of our circle)
+    let boundary = app.window_rect();
+
+    // Map the sine wave functions to ranges between the boundaries of the window
+    let x = map_range(sine, -1.0, 1.0, boundary.left(), boundary.right());
+    let y = map_range(slowersine, -1.0, 1.0, boundary.bottom(), boundary.top());
+
+    // Clear the background to purple.
+    draw.background().color(PLUM);
+
+    // Draw a blue ellipse at the x/y coordinates 0.0, 0.0
+    draw.ellipse().color(STEELBLUE).x_y(x, y);
+
+    draw.to_frame(app, &frame).unwrap();
+}
+
+fn draw_circles(img: &mut RgbImage, circle_coordinates_list: &[CircleCoordinates]) {
     for circle_coordinates in circle_coordinates_list {
         let color_rgba = match circle_coordinates.color {
-            EasyColor::Green => Rgba([0, 255, 0, 100]),
-            EasyColor::Red => Rgba([255, 0, 0, 100]),
+            EasyColor::Green => Rgb([0, 255, 0]),
+            EasyColor::Red => Rgb([255, 0, 0]),
         };
 
         for i in 0..circle_coordinates.width {
@@ -37,8 +67,6 @@ fn draw_circles(img: &mut RgbaImage, circle_coordinates_list: &[CircleCoordinate
         }
     }
 }
-    
-
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -54,11 +82,7 @@ struct Args {
 fn main() -> anyhow::Result<()> {
     let args = Args::parse();
 
-    let images = pdf_images(&args.input, None)?;
-
-    let mut img = image::open("./src/cat.jpg")
-        .expect("Failed to open image")
-        .to_rgba8();
+    let mut images = pdf_images(&args.input, None)?;
 
     let circles = vec![
         CircleCoordinates {
@@ -83,11 +107,13 @@ fn main() -> anyhow::Result<()> {
             color: EasyColor::Green,
         },
     ];
-    draw_circles(&mut img, &circles);
+    draw_circles(&mut images[0], &circles);
 
-    img.save("output.png").expect("Failed to save image");
+    images[0].save("output.png").expect("Failed to save image");
 
-    dbg!(images[0][(0,0)]);
+    nannou::app(model).event(event).simple_window(view).run();
+
+    dbg!(images[0][(0, 0)]);
 
     Ok(())
 }
