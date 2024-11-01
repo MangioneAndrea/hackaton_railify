@@ -1,3 +1,4 @@
 *.png
 *.jpg
 /target
+libpdfium.dylib
