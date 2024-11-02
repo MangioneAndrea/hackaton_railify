@@ -1256,11 +1256,11 @@ dependencies = [
  "image 0.25.4",
  "imageproc",
  "nannou",
- "nicola",
  "pdf",
  "pdfium-render",
  "resvg",
  "svg",
+ "svg_helper",
  "usvg",
 ]
 
@@ -2079,15 +2079,6 @@ name = "new_debug_unreachable"
 version = "1.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "650eef8c711430f1a879fdd01d4745a7deea475becfb90269c06775983bbf086"
-
-[[package]]
-name = "nicola"
-version = "0.1.0"
-dependencies = [
- "image 0.25.4",
- "nannou",
- "svg",
-]
 
 [[package]]
 name = "nix"
@@ -3230,6 +3221,15 @@ name = "svg"
 version = "0.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "94afda9cd163c04f6bee8b4bf2501c91548deae308373c436f36aeff3cf3c4a3"
+
+[[package]]
+name = "svg_helper"
+version = "0.1.0"
+dependencies = [
+ "image 0.25.4",
+ "nannou",
+ "svg",
+]
 
 [[package]]
 name = "svgtypes"

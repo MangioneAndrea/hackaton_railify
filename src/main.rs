@@ -4,7 +4,7 @@ use image::Rgb;
 use imageproc::drawing::draw_hollow_circle_mut;
 
 use nannou::draw::background::new;
-use nicola::{insert_svg, Edge, Node, Object};
+use svg_helper::{insert_svg, Edge, Node, Object};
 use svg::node::element;
 use svg::node::element::Rectangle;
 use svg::Document;
