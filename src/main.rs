@@ -3,8 +3,6 @@ use draw::*;
 use image::Rgb;
 use imageproc::drawing::draw_hollow_circle_mut;
 
-use nannou::draw::background::new;
-use svg::node::element;
 use svg::node::element::Rectangle;
 use svg::Document;
 

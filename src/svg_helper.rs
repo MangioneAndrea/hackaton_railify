@@ -1,6 +1,5 @@
 use std::rc::Rc;
 
-use nannou::lyon::geom::euclid::approxord::max;
 use svg::node::element::Circle;
 use svg::node::element::Element;
 use svg::node::element::Line;
