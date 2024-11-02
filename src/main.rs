@@ -10,6 +10,7 @@ use svg::Document;
 use image::RgbImage;
 use pdfium_render::prelude::*;
 use std::{
+    cell::RefCell,
     future,
     path::{Path, PathBuf},
     rc::Rc,
@@ -80,6 +81,7 @@ fn main() -> anyhow::Result<()> {
         .expect("Failed to save image");
 
     let shapes: Vec<_> = lines
+        .clone()
         .into_iter()
         .flat_map(|s| match s {
             shape_finder::Shape::Line(l) => vec![draw::Shape::Line {
@@ -88,18 +90,18 @@ fn main() -> anyhow::Result<()> {
                 color: rgba(0., 0., 0., 1.),
                 weight: l.thickness,
             }],
-            shape_finder::Shape::Point(p, pinpoint) if pinpoint => {
-                vec![draw::Shape::Circle { 
+            shape_finder::Shape::Point(p, prevs, pinpoint) if pinpoint => {
+                vec![draw::Shape::Circle {
                     position: Vec2::new(p.0 as _, p.1 as _),
                     color: rgba(0., 255., 0., 1.),
-                    radius: 20.
+                    radius: 20.,
                 }]
-            },
-            shape_finder::Shape::Point(p, _) => {
-                vec![draw::Shape::Circle { 
+            }
+            shape_finder::Shape::Point(p, prevs, _) => {
+                vec![draw::Shape::Circle {
                     position: Vec2::new(p.0 as _, p.1 as _),
                     color: rgba(0., 0., 255., 1.),
-                    radius: 20.
+                    radius: 20.,
                 }]
             }
             shape_finder::Shape::Custom(pixels) => pixels
@@ -112,24 +114,59 @@ fn main() -> anyhow::Result<()> {
         })
         .collect();
 
+    let mut nodes: Vec<_> = lines
+        .clone()
+        .into_iter()
+        .filter_map(|s| match s {
+            shape_finder::Shape::Point(p, prevs, _) => Some((
+                Rc::new(RefCell::new(Node {
+                    coordinates: (p.0 as _, p.1 as _),
+                    prev: vec![],
+                })),
+                prevs,
+            )),
+            _ => None,
+        })
+        .collect();
 
-    //let nodes: Vec<_> = lines
-    //    .iter()
-    //    .filter_map(|s| match s {
-    //        shape_finder::Shape::Point(p, pinpoint) if *pinpoint => {
-    //            Some(Connectable::PinPoint(Rc::new(PinPoint {
-    //                coordinates: (p.0 as _, p.1 as _),
-    //                prev: todo!(),
-    //            })))
-    //        }
-    //        shape_finder::Shape::Point(p, _) => Some(Connectable::Node(Rc::new(Node {
-    //            coordinates: (p.0 as _, p.1 as _),
-    //            prev: vec![],
-    //        }))),
-    //        _ => None,
-    //    })
-    //    .collect();
-    //
+    let node_clone = nodes.clone();
+
+    for node in &mut nodes {
+        node.0.borrow_mut().prev = node_clone
+            .iter()
+            .filter(|other| {
+                node.1
+                    .iter()
+                    .find(|prev| {
+                        prev.0 as i32 == other.0.borrow().coordinates.0
+                            && prev.1 as i32 == other.0.borrow().coordinates.1
+                    })
+                    .is_some()
+            })
+            .map(|o| Connectable::Node(o.0.clone()))
+            .collect()
+    }
+
+    let pinpoints: Vec<_> = lines
+        .iter()
+        .filter_map(|s| match s {
+            shape_finder::Shape::Point(p, prevs, pinpoint) if *pinpoint => {
+                Some(Connectable::PinPoint(Rc::new(PinPoint {
+                    coordinates: (p.0 as _, p.1 as _),
+                    prev: Connectable::Node(
+                        nodes
+                            .iter()
+                            .find(|el| el.0.borrow().coordinates.0 == prevs[0].0 as i32)
+                            .unwrap()
+                            .0
+                            .clone(),
+                    ),
+                })))
+            }
+            _ => None,
+        })
+        .collect();
+
     nannou::app::Builder::new_async(move |app| {
         Box::new(future::ready(model(app, shapes, args.render_interval)))
     })

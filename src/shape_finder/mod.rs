@@ -2,10 +2,11 @@ use core::{f32, panic};
 use std::{cmp::Ordering, collections::HashMap, usize};
 
 use image::RgbImage;
+use iter_tools::Itertools;
 use nalgebra::ComplexField;
 use nannou::{glam::Vec2, prelude::Float};
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, PartialOrd)]
 pub struct Point(pub f32, pub f32);
 
 impl Into<Vec2> for Point {
@@ -133,7 +134,7 @@ impl Line {
 #[derive(Clone, Debug, PartialEq)]
 pub enum Shape {
     Line(Line),
-    Point(Point, bool),
+    Point(Point, Vec<Point>, bool),
     Custom(Vec<(usize, usize)>),
 }
 
@@ -315,19 +316,7 @@ pub fn split_line(line: &Line, points: Vec<Point>) -> Vec<Line> {
     points.push(line.start.clone());
     points.push(line.end.clone());
 
-    points.sort_by(|a, b| {
-        if a.0 < b.0 {
-            return Ordering::Less;
-        } else if a.0 > b.0 {
-            return Ordering::Greater;
-        } else if a.1 < b.1 {
-            return Ordering::Less;
-        } else if a.1 > b.1 {
-            return Ordering::Greater;
-        }
-
-        return Ordering::Equal;
-    });
+    points.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
     let mut res = vec![];
     let mut iter = points.iter().peekable();
@@ -335,11 +324,22 @@ pub fn split_line(line: &Line, points: Vec<Point>) -> Vec<Line> {
     while let Some(mut peek) = iter.peek() {
         let mut start = pivot.unwrap();
         if start.distance(peek) > 3. {
-            res.push(Line {
-                start: start.clone().clone(),
-                end: peek.clone().clone().clone(),
-                thickness: line.thickness,
-            });
+            match start.partial_cmp(&peek).unwrap() {
+                Ordering::Less => {
+                    res.push(Line {
+                        start: start.clone().clone(),
+                        end: peek.clone().clone().clone(),
+                        thickness: line.thickness,
+                    });
+                }
+                _ => {
+                    res.push(Line {
+                        end: start.clone().clone(),
+                        start: peek.clone().clone().clone(),
+                        thickness: line.thickness,
+                    });
+                }
+            };
         }
         pivot = iter.next();
     }
@@ -375,19 +375,36 @@ pub fn shapes_from_image(img: &mut RgbImage) -> Vec<Shape> {
         }
     }
 
+    real_lines = real_lines
+        .into_iter()
+        .filter(|l| l.thickness > 1.)
+        .collect();
+
     let mut points: Vec<_> = real_lines.iter().map(|l| l.start.clone()).collect();
-    let mut points2: Vec<_> = real_lines.iter().map(|l| l.end.clone()).collect();
+    let points2: Vec<_> = real_lines.iter().map(|l| l.end.clone()).collect();
 
     points.extend(points2);
 
-    let mut real_lines: Vec<_> = real_lines.iter().map(|l| Shape::Line(l.clone())).collect();
-
     let mut new_points = vec![];
 
-    for a in &points {
+    for point in points {
+        let cns: Vec<_> = real_lines
+            .iter()
+            .filter(|line| line.end == point)
+            .map(|line| line.start.clone())
+            .collect();
+
+        new_points.push((point, cns));
+    }
+
+    let mut real_lines: Vec<_> = real_lines.iter().map(|l| Shape::Line(l.clone())).collect();
+
+    let mut points = vec![];
+    for (a, mut cns) in new_points.clone() {
         let mut count = 0;
-        for b in &points {
-            if a == b {
+        for (b, cns2) in &new_points {
+            if &a == b {
+                cns.extend(cns2.clone());
                 count += 1;
                 continue;
             }
@@ -395,21 +412,31 @@ pub fn shapes_from_image(img: &mut RgbImage) -> Vec<Shape> {
             let diff = (a.0 - b.0).abs() + (a.1 - b.1).abs();
 
             if diff.abs() < 20. {
+                cns.extend(cns2.clone());
                 count += 1;
             }
+
+            cns = cns
+                .into_iter()
+                .unique_by(|f| (f.0 as usize, f.1 as usize))
+                .collect();
         }
         if count == 2 {
-            new_points.push((a, true));
+            points.push((a, cns, true));
         } else {
-            new_points.push((a, false));
+            points.push((a, cns, false));
         }
     }
 
-    let points: Vec<_> = new_points
+    let points: Vec<_> = points
         .into_iter()
-        .map(|p| Shape::Point(p.0.clone(), p.1))
+        .map(|p| Shape::Point(p.0.clone(), p.1.clone(), p.2))
         .collect();
     real_lines.extend(points);
+
+    for el in &real_lines {
+        println!("{:?}", el);
+    }
 
     real_lines
 }
