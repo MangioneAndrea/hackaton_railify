@@ -15,7 +15,9 @@ use std::{
 
 use clap::Parser;
 
+mod data_structures;
 mod shape_finder;
+
 
 enum EasyColor {
     Red,
@@ -64,6 +66,9 @@ struct Args {
 }
 
 fn main() -> anyhow::Result<()> {
+
+    data_structures::example();
+
     let args = Args::parse();
 
     let mut images = pdf_images(&args.input, None)?;
