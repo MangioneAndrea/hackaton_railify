@@ -1,16 +1,24 @@
-use draw::*;
-
-use image::{Rgb};
+use draw::{generate_shapes, model, update, view};
+use image::Rgb;
 use imageproc::drawing::draw_hollow_circle_mut;
 
-use svg::Document;
+use nannou::{
+    color::{rgba, rgba8},
+    glam::Vec2,
+};
 use svg::node::element::Rectangle;
+use svg::Document;
 
 use image::RgbImage;
 use pdfium_render::prelude::*;
-use std::path::{Path, PathBuf};
+use std::{
+    future,
+    path::{Path, PathBuf},
+};
 
 use clap::Parser;
+
+mod shape_finder;
 
 enum EasyColor {
     Red,
@@ -59,40 +67,26 @@ fn main() -> anyhow::Result<()> {
 
     let mut images = pdf_images(&args.input, None)?;
 
-    let circles = vec![
-        CircleCoordinates {
-            x: 100,
-            y: 150,
-            radius: 50,
-            width: 3,
-            color: EasyColor::Red,
-        },
-        CircleCoordinates {
-            x: 200,
-            y: 100,
-            radius: 30,
-            width: 2,
-            color: EasyColor::Green,
-        },
-        CircleCoordinates {
-            x: 200,
-            y: 300,
-            radius: 10,
-            width: 1,
-            color: EasyColor::Green,
-        },
-    ];
-    draw_circles(&mut images[0], &circles);
+    let lines = shape_finder::shapes_from_image(&images[0]);
 
-    images[0].save("output.png").expect("Failed to save image");
+    let shapes: Vec<_> = lines
+        .iter()
+        .map(|s| match s {
+            &shape_finder::Shape::Line(l) => draw::Shape::Line {
+                start: Vec2::new(l.1 as f32, l.0 as f32),
+                end: Vec2::new(l.2 as f32, l.0 as f32),
+                color: rgba(1., 1., 1., 1.),
+                weight: 1.,
+            },
+        })
+        .collect();
 
-    let image = &images[0];
-    let svg = convert_image_to_svg(image);
-    svg::save("output.svg", &svg).expect("Failed to save svg");
+    let shapes = generate_shapes();
 
-    nannou::app(model).update(update).simple_window(view).run();
-
-    dbg!(images[0][(0, 0)]);
+    nannou::app::Builder::new_async(move |app| Box::new(future::ready(model(app, shapes))))
+        .update(update)
+        .simple_window(view)
+        .run();
 
     Ok(())
 }
