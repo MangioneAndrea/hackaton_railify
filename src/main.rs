@@ -67,8 +67,12 @@ fn main() -> anyhow::Result<()> {
     let args = Args::parse();
 
     let mut images = pdf_images(&args.input, None)?;
+    let img = &mut images[args.page as usize];
 
-    let lines = shape_finder::shapes_from_image(&mut images[0]);
+    let lines = shape_finder::shapes_from_image(img);
+
+    mark_all_unresolved_pixels(img);
+    images[args.page as usize].save("non-resolved-parts.png").expect("Failed to save image");
 
     let shapes: Vec<_> = lines
         .into_iter()
@@ -91,6 +95,24 @@ fn main() -> anyhow::Result<()> {
     .run();
 
     Ok(())
+}
+
+fn mark_all_unresolved_pixels(image: &mut RgbImage) {
+    for y in 0..image.height() {
+        for x in 0..image.width() {
+            let pixel = image.get_pixel(x, y);
+            let (r, g, b) = (pixel[0], pixel[1], pixel[2]);
+
+            if !is_white_pixel(r, g, b) {
+                mark_pixel(image, x, y);
+            }
+        }
+    }
+}
+
+fn mark_pixel(image: &mut RgbImage, x: u32, y: u32) {
+    let color = Rgb([255, 0, 0]);
+    image.put_pixel(x, y, color);
 }
 
 fn is_white_pixel(r: u8, g: u8, b: u8) -> bool {
