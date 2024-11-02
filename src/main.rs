@@ -72,13 +72,20 @@ fn main() -> anyhow::Result<()> {
 
     let shapes: Vec<_> = lines
         .into_iter()
-        .map(|s| match s {
-            shape_finder::Shape::Line(l) => draw::Shape::Line {
+        .flat_map(|s| match s {
+            shape_finder::Shape::Line(l) => vec![draw::Shape::Line {
                 start: l.start.into(),
                 end: l.end.into(),
                 color: rgba(0., 0., 0., 1.),
                 weight: l.thickness,
-            },
+            }],
+            shape_finder::Shape::Custom(pixels) => pixels
+                .iter()
+                .map(|p| draw::Shape::Point {
+                    position: Vec2::new(p.0 as _, p.1 as _),
+                    color: rgba(255., 0., 0., 1.),
+                })
+                .collect(),
         })
         .collect();
 
@@ -130,8 +137,7 @@ fn pdf_images(
     let document = pdfium.load_pdf_from_file(path, password)?;
 
     let render_config = PdfRenderConfig::new()
-        .set_target_width(2480)
-        .set_maximum_height(3508);
+        .set_target_width(800);
 
     let mut images = vec![];
     for (_, page) in document.pages().iter().enumerate() {

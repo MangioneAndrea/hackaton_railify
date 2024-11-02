@@ -1,16 +1,17 @@
 use core::{f32, panic};
-use std::usize;
+use std::{collections::HashMap, usize};
 
 use image::{GenericImageView, RgbImage};
 use imageproc::drawing::Canvas;
 use nannou::glam::Vec2;
+use svg::node::element::tag::Line;
 
 #[derive(Clone, Debug)]
 pub struct Point(pub f32, pub f32);
 
 impl Into<Vec2> for Point {
     fn into(self) -> Vec2 {
-        Vec2::new(self.0 as f32, self.1 as f32) / 5.
+        Vec2::new(self.0 as f32, self.1 as f32)
     }
 }
 
@@ -25,6 +26,60 @@ pub struct Line {
     pub start: Point,
     pub end: Point,
     pub thickness: f32,
+}
+
+impl TryFrom<Vec<(usize, usize)>> for Line {
+    type Error = ();
+    fn try_from(value: Vec<(usize, usize)>) -> Result<Self, Self::Error> {
+        let mut map: HashMap<usize, usize> = HashMap::new();
+
+        for (x, y) in &value {
+            if let Some(v) = map.get_mut(&y) {
+                *v += 1;
+            } else {
+                map.insert(*y, 1);
+            }
+        }
+
+        let values = map.values();
+        let min = values.clone().min().ok_or(())?;
+        let max = values.max().ok_or(())?;
+
+        // dbg!(map.clone());
+
+        println!("{} {min} {max}", max - min);
+
+        if max - min < 5 {
+            map.clear();
+
+            for (x, y) in &value {
+                if let Some(v) = map.get_mut(&x) {
+                    *v += 1;
+                } else {
+                    map.insert(*x, 1);
+                }
+            }
+
+            let values = map.values();
+            let min = values.clone().min().ok_or(())?;
+            let max = values.max().ok_or(())?;
+
+            if max - min < 5 {
+                let min_x = value.iter().map(|(x, _)| x).min().unwrap();
+                let max_x = value.iter().map(|(x, _)| x).max().unwrap();
+                let min_y = value.iter().map(|(_, y)| y).min().unwrap();
+                let max_y = value.iter().map(|(_, y)| y).max().unwrap();
+
+                return Ok(Line {
+                    start: Point(*min_x as _, *max_y as _),
+                    end: Point(*max_x as _, *min_y as _),
+                    thickness: ((min + max) / 2) as f32,
+                });
+            }
+        }
+
+        Err(())
+    }
 }
 
 impl Line {
@@ -50,6 +105,7 @@ impl Line {
 #[derive(Clone, Debug)]
 pub enum Shape {
     Line(Line),
+    Custom(Vec<(usize, usize)>),
 }
 
 impl Shape {
@@ -98,7 +154,6 @@ fn horizzontal_lines_from_image(img: &mut RgbImage) -> Vec<Shape> {
                 }
 
                 prev = Some(x as usize);
-                println!("{x} {y} = {c:?}");
             } else {
                 if let Some(a) = prev {
                     if x as usize - a >= MIN_LINE_LEN {
@@ -119,9 +174,9 @@ fn horizzontal_lines_from_image(img: &mut RgbImage) -> Vec<Shape> {
             pixel.0 = [255, 255, 255];
         }
 
-        line.0 -= min_y;
-        line.1 -= min_x;
-        line.2 -= min_x;
+        //line.0 -= min_y;
+        //line.1 -= min_x;
+        //line.2 -= min_x;
     }
 
     // merge all the lines
@@ -154,10 +209,7 @@ fn horizzontal_lines_from_image(img: &mut RgbImage) -> Vec<Shape> {
 
             let peek = peek.unwrap();
 
-            println!("Similarity: {}", next.similarity_to(peek));
-
             if next.similarity_to(peek) < 20. {
-                println!("true");
                 let peek = iter.next().unwrap();
 
                 next = next.merge_with(peek);
@@ -168,24 +220,70 @@ fn horizzontal_lines_from_image(img: &mut RgbImage) -> Vec<Shape> {
         }
     }
 
-    for line in &mut lines {
-        match line {
-            Shape::Line(line) => println!("{:?} {:?} {}", line.start, line.end, line.thickness),
-        }
-    }
+    //for line in &mut lines {
+    //    match line {
+    //        Shape::Line(line) => println!("{:?} {:?} {}", line.start, line.end, line.thickness),
+    //        _ => {}
+    //    }
+    //}
 
     return lines;
 }
 
-fn extract_shape(img: &mut RgbImage) -> Shape {
-    todo!()
+fn extract_shape(img: &mut RgbImage, x: usize, y: usize) -> Vec<(usize, usize)> {
+    let c = img.get_pixel_mut_checked(x as _, y as _);
+
+    if let Some(c) = c {
+        if c.0[0] < THRESHOLD && c.0[1] < THRESHOLD && c.0[2] < THRESHOLD {
+            c.0 = [255, 255, 255];
+            let mut res = vec![(x, (img.height() as usize - y))];
+            res.extend(extract_shape(img, x + 1, y));
+            res.extend(extract_shape(img, x - 1, y));
+            res.extend(extract_shape(img, x + 1, y + 1));
+            res.extend(extract_shape(img, x - 1, y + 1));
+            res.extend(extract_shape(img, x, y + 1));
+            res.extend(extract_shape(img, x + 1, y - 1));
+            res.extend(extract_shape(img, x - 1, y - 1));
+            res.extend(extract_shape(img, x, y - 1));
+
+            return res;
+        }
+    }
+
+    vec![]
 }
 
+fn extract_shapes(img: &mut RgbImage) -> Vec<Shape> {
+    let mut res = vec![];
+    for y in 0..img.height() {
+        for x in 0..img.width() {
+            let c = img.get_pixel(x, y).0;
+
+            if c[0] < THRESHOLD && c[1] < THRESHOLD && c[2] < THRESHOLD {
+                let shape = extract_shape(img, x as _, y as _);
+
+                if shape.len() > 50 {
+                    res.push(
+                        Line::try_from(shape.clone())
+                            .map(|l| Shape::Line(l))
+                            .unwrap_or_else(|l| Shape::Custom(shape)),
+                    );
+                }
+            }
+        }
+    }
+
+    res
+}
 
 pub fn shapes_from_image(img: &mut RgbImage) -> Vec<Shape> {
-    let lines = horizzontal_lines_from_image(img);
+    let mut lines = horizzontal_lines_from_image(img);
 
-    // let diagonals = diagonal_lines_from_image(img);
+    let diagonals = extract_shapes(img);
+
+    println!("{}", diagonals.len());
+
+    lines.extend(diagonals);
 
     lines
 }
