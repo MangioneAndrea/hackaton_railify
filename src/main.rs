@@ -1,9 +1,9 @@
-use draw::{generate_shapes, model, update, view};
+use draw::{model, update, view};
 use image::Rgb;
 use imageproc::drawing::draw_hollow_circle_mut;
 
 use nannou::{
-    color::{rgba, rgba8},
+    color::{rgba},
     glam::Vec2,
 };
 use svg::node::element::Rectangle;
@@ -60,6 +60,10 @@ struct Args {
     /// Page number
     #[arg(short, long, default_value_t = 0)]
     page: u32,
+
+    /// Rerender 
+    #[arg(short, long, default_value_t = 1.0)]
+    render_interval: f64
 }
 
 fn main() -> anyhow::Result<()> {
@@ -81,9 +85,7 @@ fn main() -> anyhow::Result<()> {
         })
         .collect();
 
-    let shapes = generate_shapes();
-
-    nannou::app::Builder::new_async(move |app| Box::new(future::ready(model(app, shapes))))
+    nannou::app::Builder::new_async(move |app| Box::new(future::ready(model(app, shapes, args.render_interval))))
         .update(update)
         .simple_window(view)
         .run();
