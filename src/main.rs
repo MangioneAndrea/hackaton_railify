@@ -1,5 +1,10 @@
-use image::{Rgb, RgbaImage};
+use nannou::prelude::*;
+
+use image::{Rgb};
 use imageproc::drawing::draw_hollow_circle_mut;
+
+use svg::Document;
+use svg::node::element::Rectangle;
 
 use image::RgbImage;
 use pdfium_render::prelude::*;
@@ -20,31 +25,27 @@ struct CircleCoordinates {
     color: EasyColor,
 }
 
-use nannou::prelude::*;
 struct Model {}
 
 fn model(_app: &App) -> Model {
     Model {}
 }
+
 fn event(_app: &App, _model: &mut Model, _event: Event) {}
+
 fn view(app: &App, _model: &Model, frame: Frame) {
     let draw = app.draw();
 
-    // Generate sine wave data based on the time of the app
     let sine = app.time.sin();
     let slowersine = (app.time / 2.0).sin();
 
-    // Get boundary of the window (to constrain the movements of our circle)
     let boundary = app.window_rect();
 
-    // Map the sine wave functions to ranges between the boundaries of the window
     let x = map_range(sine, -1.0, 1.0, boundary.left(), boundary.right());
     let y = map_range(slowersine, -1.0, 1.0, boundary.bottom(), boundary.top());
 
-    // Clear the background to purple.
     draw.background().color(PLUM);
 
-    // Draw a blue ellipse at the x/y coordinates 0.0, 0.0
     draw.ellipse().color(STEELBLUE).x_y(x, y);
 
     draw.to_frame(app, &frame).unwrap();
@@ -111,11 +112,43 @@ fn main() -> anyhow::Result<()> {
 
     images[0].save("output.png").expect("Failed to save image");
 
+    let image = &images[0];
+    let svg = convert_image_to_svg(image);
+    svg::save("output.svg", &svg).expect("Failed to save svg");
+
     nannou::app(model).event(event).simple_window(view).run();
 
     dbg!(images[0][(0, 0)]);
 
     Ok(())
+}
+
+fn is_white_pixel(r: u8, g: u8, b: u8) -> bool {
+    (r, g, b) == (255, 255, 255)
+}
+
+fn convert_image_to_svg(image: &RgbImage) -> Document {
+    let mut svg = Document::new();
+    for y in 0..image.height() {
+        for x in 0..image.width() {
+            let pixel = image.get_pixel(x, y);
+            let (r, g, b) = (pixel[0], pixel[1], pixel[2]);
+
+            if is_white_pixel(r, g, b) {
+                continue;
+            }
+
+            let rect = Rectangle::new()
+                .set("x", x as i32)
+                .set("y", y as i32)
+                .set("width", 1)
+                .set("height", 1)
+                .set("fill", format!("rgb({},{},{})", r, g, b));
+
+            svg = svg.add(rect);
+        }
+    }
+    svg
 }
 
 fn pdf_images(
