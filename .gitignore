@@ -1,6 +1,7 @@
 # Ignore image files
-*.jpg
-*.svg
+./*.jpg
+./*.svg
+./*.png
 
 # Ignore target directory
 target/
