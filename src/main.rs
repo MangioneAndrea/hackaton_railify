@@ -1,16 +1,47 @@
 use draw::*;
-use svg_draw::*;
 
-use image::RgbImage;
-use nalgebra::Vector2 as Point2;
+use image::{Rgb};
+use imageproc::drawing::draw_hollow_circle_mut;
 
 use svg::Document;
 use svg::node::element::Rectangle;
 
+use image::RgbImage;
 use pdfium_render::prelude::*;
 use std::path::{Path, PathBuf};
 
 use clap::Parser;
+
+enum EasyColor {
+    Red,
+    Green,
+}
+
+struct CircleCoordinates {
+    x: i32,
+    y: i32,
+    radius: i32,
+    width: u8,
+    color: EasyColor,
+}
+
+fn draw_circles(img: &mut RgbImage, circle_coordinates_list: &[CircleCoordinates]) {
+    for circle_coordinates in circle_coordinates_list {
+        let color_rgba = match circle_coordinates.color {
+            EasyColor::Green => Rgb([0, 255, 0]),
+            EasyColor::Red => Rgb([255, 0, 0]),
+        };
+
+        for i in 0..circle_coordinates.width {
+            draw_hollow_circle_mut(
+                img,
+                (circle_coordinates.x, circle_coordinates.y),
+                circle_coordinates.radius + i as i32,
+                color_rgba,
+            );
+        }
+    }
+}
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -26,35 +57,36 @@ struct Args {
 fn main() -> anyhow::Result<()> {
     let args = Args::parse();
 
-    let images = pdf_images(&args.input, None)?;
+    let mut images = pdf_images(&args.input, None)?;
 
-    let image = &images[0];
-
-    let shapes = vec![
-        Shape::Line {
-            start: Point2::new(10, 10),
-            end: Point2::new(300, 10),
-            color: Color {r: 255, g: 0, b: 0},
-            weight: 2.0,
+    let circles = vec![
+        CircleCoordinates {
+            x: 100,
+            y: 150,
+            radius: 50,
+            width: 3,
+            color: EasyColor::Red,
         },
-        Shape::Rectangle {
-            position: Point2::new(50, 50),
-            width: 100,
-            height: 150,
-            color: Color {r: 0, g: 255, b: 0},
+        CircleCoordinates {
+            x: 200,
+            y: 100,
+            radius: 30,
+            width: 2,
+            color: EasyColor::Green,
         },
-        Shape::Text {
-            content: "Hello, SVG!".to_string(),
-            position: Point2::new(50, 250),
-            font_size: 24,
-            color: Color {r: 0, g: 0, b: 255},
+        CircleCoordinates {
+            x: 200,
+            y: 300,
+            radius: 10,
+            width: 1,
+            color: EasyColor::Green,
         },
     ];
-    // shaped version
-    let svg_document = draw_svg_image(&image, shapes);
-    svg::save("output-2.svg", &svg_document).expect("Failed to save svg");
+    draw_circles(&mut images[0], &circles);
 
-    // pixel version
+    images[0].save("output.png").expect("Failed to save image");
+
+    let image = &images[0];
     let svg = convert_image_to_svg(image);
     svg::save("output.svg", &svg).expect("Failed to save svg");
 
@@ -69,8 +101,6 @@ fn is_white_pixel(r: u8, g: u8, b: u8) -> bool {
     (r, g, b) == (255, 255, 255)
 }
 
-
-// should be removed
 fn convert_image_to_svg(image: &RgbImage) -> Document {
     let mut svg = Document::new();
     for y in 0..image.height() {

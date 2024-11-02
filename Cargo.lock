@@ -1205,12 +1205,10 @@ dependencies = [
  "draw",
  "image 0.25.4",
  "imageproc",
- "nalgebra 0.33.2",
  "nannou",
  "pdf",
  "pdfium-render",
  "svg",
- "svg_draw",
 ]
 
 [[package]]
@@ -1370,7 +1368,7 @@ dependencies = [
  "getrandom 0.2.15",
  "image 0.25.4",
  "itertools 0.12.1",
- "nalgebra 0.32.6",
+ "nalgebra",
  "num",
  "rand 0.8.5",
  "rand_distr",
@@ -1889,35 +1887,8 @@ dependencies = [
  "num-complex",
  "num-rational 0.4.2",
  "num-traits",
- "simba 0.8.1",
+ "simba",
  "typenum",
-]
-
-[[package]]
-name = "nalgebra"
-version = "0.33.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "26aecdf64b707efd1310e3544d709c5c0ac61c13756046aaaba41be5c4f66a3b"
-dependencies = [
- "approx 0.5.1",
- "matrixmultiply",
- "nalgebra-macros",
- "num-complex",
- "num-rational 0.4.2",
- "num-traits",
- "simba 0.9.0",
- "typenum",
-]
-
-[[package]]
-name = "nalgebra-macros"
-version = "0.2.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "254a5372af8fc138e36684761d3c0cdb758a4410e938babcff1c860ce14ddbfc"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.86",
 ]
 
 [[package]]
@@ -2952,19 +2923,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "simba"
-version = "0.9.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b3a386a501cd104797982c15ae17aafe8b9261315b5d07e3ec803f2ea26be0fa"
-dependencies = [
- "approx 0.5.1",
- "num-complex",
- "num-traits",
- "paste",
- "wide",
-]
-
-[[package]]
 name = "simd-adler32"
 version = "0.3.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3107,15 +3065,6 @@ name = "svg"
 version = "0.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "94afda9cd163c04f6bee8b4bf2501c91548deae308373c436f36aeff3cf3c4a3"
-
-[[package]]
-name = "svg_draw"
-version = "0.1.0"
-dependencies = [
- "image 0.25.4",
- "nalgebra 0.33.2",
- "svg",
-]
 
 [[package]]
 name = "syn"
