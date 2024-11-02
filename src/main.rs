@@ -1,18 +1,22 @@
-use draw::*;
-
+use draw::{model, update, view, WINDOW_HEIGHT, WINDOW_WIDTH};
 use image::Rgb;
 use imageproc::drawing::draw_hollow_circle_mut;
 
+use nannou::{color::rgba, glam::Vec2};
 use svg::node::element::Rectangle;
 use svg::Document;
 
 use image::RgbImage;
 use pdfium_render::prelude::*;
-use std::path::{Path, PathBuf};
+use std::{
+    future,
+    path::{Path, PathBuf},
+};
 
 use clap::Parser;
 
 mod data_structures;
+mod shape_finder;
 mod svg_helper;
 
 enum EasyColor {
@@ -55,52 +59,73 @@ struct Args {
     /// Page number
     #[arg(short, long, default_value_t = 0)]
     page: u32,
+
+    /// Rerender
+    #[arg(short, long, default_value_t = 1.0)]
+    render_interval: f64,
 }
 
 fn main() -> anyhow::Result<()> {
+    data_structures::example();
+
     let args = Args::parse();
 
     let mut images = pdf_images(&args.input, None)?;
+    let img = &mut images[args.page as usize];
 
-    let circles = vec![
-        CircleCoordinates {
-            x: 100,
-            y: 150,
-            radius: 50,
-            width: 3,
-            color: EasyColor::Red,
-        },
-        CircleCoordinates {
-            x: 200,
-            y: 100,
-            radius: 30,
-            width: 2,
-            color: EasyColor::Green,
-        },
-        CircleCoordinates {
-            x: 200,
-            y: 300,
-            radius: 10,
-            width: 1,
-            color: EasyColor::Green,
-        },
-    ];
+    let lines = shape_finder::shapes_from_image(img);
 
-    data_structures::example();
+    mark_all_unresolved_pixels(img);
+    images[args.page as usize]
+        .save("non-resolved-parts.png")
+        .expect("Failed to save image");
 
-    draw_circles(&mut images[0], &circles);
+    let shapes: Vec<_> = lines
+        .into_iter()
+        .flat_map(|s| match s {
+            shape_finder::Shape::Line(l) => vec![draw::Shape::Line {
+                start: l.start.into(),
+                end: l.end.into(),
+                color: rgba(0., 0., 0., 1.),
+                weight: l.thickness,
+            }],
+            shape_finder::Shape::Custom(pixels) => pixels
+                .iter()
+                .map(|p| draw::Shape::Point {
+                    position: Vec2::new(p.0 as _, p.1 as _),
+                    color: rgba(255., 0., 0., 1.),
+                })
+                .collect(),
+        })
+        .collect();
 
-    images[0].save("output.png").expect("Failed to save image");
-
-    let image = &images[0];
-    let svg = convert_image_to_svg(image);
-    svg::save("output.svg", &svg).expect("Failed to save svg");
-
-    nannou::app(model).update(update).simple_window(view).run();
-
-    dbg!(images[0][(0, 0)]);
+    nannou::app::Builder::new_async(move |app| {
+        Box::new(future::ready(model(app, shapes, args.render_interval)))
+    })
+    .update(update)
+    .simple_window(view)
+    .size(WINDOW_WIDTH, WINDOW_HEIGHT)
+    .run();
 
     Ok(())
+}
+
+fn mark_all_unresolved_pixels(image: &mut RgbImage) {
+    for y in 0..image.height() {
+        for x in 0..image.width() {
+            let pixel = image.get_pixel(x, y);
+            let (r, g, b) = (pixel[0], pixel[1], pixel[2]);
+
+            if !is_white_pixel(r, g, b) {
+                mark_pixel(image, x, y);
+            }
+        }
+    }
+}
+
+fn mark_pixel(image: &mut RgbImage, x: u32, y: u32) {
+    let color = Rgb([255, 0, 0]);
+    image.put_pixel(x, y, color);
 }
 
 fn is_white_pixel(r: u8, g: u8, b: u8) -> bool {
@@ -139,9 +164,7 @@ fn pdf_images(
 
     let document = pdfium.load_pdf_from_file(path, password)?;
 
-    let render_config = PdfRenderConfig::new()
-        .set_target_width(5000)
-        .set_maximum_height(5000);
+    let render_config = PdfRenderConfig::new().set_target_width(800);
 
     let mut images = vec![];
     for (_, page) in document.pages().iter().enumerate() {
