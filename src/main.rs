@@ -2,10 +2,7 @@ use draw::{model, update, view};
 use image::Rgb;
 use imageproc::drawing::draw_hollow_circle_mut;
 
-use nannou::{
-    color::{rgba},
-    glam::Vec2,
-};
+use nannou::{color::rgba, glam::Vec2};
 use svg::node::element::Rectangle;
 use svg::Document;
 
@@ -61,9 +58,9 @@ struct Args {
     #[arg(short, long, default_value_t = 0)]
     page: u32,
 
-    /// Rerender 
+    /// Rerender
     #[arg(short, long, default_value_t = 1.0)]
-    render_interval: f64
+    render_interval: f64,
 }
 
 fn main() -> anyhow::Result<()> {
@@ -74,21 +71,23 @@ fn main() -> anyhow::Result<()> {
     let lines = shape_finder::shapes_from_image(&images[0]);
 
     let shapes: Vec<_> = lines
-        .iter()
+        .into_iter()
         .map(|s| match s {
-            &shape_finder::Shape::Line(l) => draw::Shape::Line {
-                start: Vec2::new(l.1 as f32, l.0 as f32),
-                end: Vec2::new(l.2 as f32, l.0 as f32),
-                color: rgba(1., 1., 1., 1.),
+            shape_finder::Shape::Line(l) => draw::Shape::Line {
+                start: l.start.into(),
+                end: l.end.into(),
+                color: rgba(0., 0., 0., 1.),
                 weight: 1.,
             },
         })
         .collect();
 
-    nannou::app::Builder::new_async(move |app| Box::new(future::ready(model(app, shapes, args.render_interval))))
-        .update(update)
-        .simple_window(view)
-        .run();
+    nannou::app::Builder::new_async(move |app| {
+        Box::new(future::ready(model(app, shapes, args.render_interval)))
+    })
+    .update(update)
+    .simple_window(view)
+    .run();
 
     Ok(())
 }

@@ -1,7 +1,27 @@
-use image::RgbImage;
+use std::usize;
 
+use image::RgbImage;
+use nannou::glam::Vec2;
+
+#[derive(Clone, Debug)]
+pub struct Point(pub usize, pub usize);
+
+impl Into<Vec2> for Point {
+    fn into(self) -> Vec2 {
+        Vec2::new(self.0 as f32, self.1 as f32) / 5.
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct Line {
+    pub start: Point,
+    pub end: Point,
+    pub thickness: usize,
+}
+
+#[derive(Clone, Debug)]
 pub enum Shape {
-    Line((usize, usize, usize)),
+    Line(Line),
 }
 
 struct Cell {}
@@ -12,13 +32,22 @@ struct Canvas {
 
 const THRESHOLD: u8 = 200;
 
-const MIN_LINE_LEN: usize = 30;
-
 pub fn shapes_from_image(img: &RgbImage) -> Vec<Shape> {
+    const MIN_LINE_LEN: usize = 100;
+
     // y , x0, x1
     let mut horizzontal_lines: Vec<(usize, usize, usize)> = vec![];
 
-    for (num, row) in img.enumerate_rows().collect::<Vec<_>>().into_iter().rev() {
+    let mut min_x = usize::MAX;
+    let mut min_y = usize::MAX;
+
+    for (num, (_, row)) in img
+        .enumerate_rows()
+        .collect::<Vec<_>>()
+        .into_iter()
+        .rev()
+        .enumerate()
+    {
         let mut prev: Option<usize> = None;
         for (x, y, c) in row {
             //if c[0] == 255 && c[1] == 255 && c[2] == 255 {
@@ -35,6 +64,9 @@ pub fn shapes_from_image(img: &RgbImage) -> Vec<Shape> {
             } else {
                 if let Some(a) = prev {
                     if x as usize - a >= MIN_LINE_LEN {
+                        min_x = min_x.min(a as usize);
+                        min_y = min_y.min(num as usize);
+
                         horizzontal_lines.push((num as usize, a, x as usize - 1));
                     }
                     prev = None
@@ -43,9 +75,28 @@ pub fn shapes_from_image(img: &RgbImage) -> Vec<Shape> {
         }
     }
 
-    for line in &horizzontal_lines {
-        println!("{line:?}")
+    for line in &mut horizzontal_lines {
+        line.0 -= min_y;
+        line.1 -= min_x;
+        line.2 -= min_x;
+        println!("{} {} {}", line.0, line.1, line.2);
     }
 
-    horizzontal_lines.iter().map(|l| Shape::Line(*l)).collect()
+    // merge all the lines
+
+    let lines = horizzontal_lines
+        .iter()
+        .map(|l| {
+            Shape::Line(Line {
+                start: Point(l.1, l.0),
+                end: Point(l.2, l.0),
+                thickness: 1,
+            })
+        })
+        .collect();
+    for line in &lines {
+        println!("{line:?}");
+    }
+
+    return lines;
 }
