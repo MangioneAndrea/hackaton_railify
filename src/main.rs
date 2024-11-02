@@ -77,16 +77,18 @@ fn main() -> anyhow::Result<()> {
                 start: l.start.into(),
                 end: l.end.into(),
                 color: rgba(0., 0., 0., 1.),
-                weight: 1.,
+                weight: l.thickness,
             },
         })
         .collect();
 
-    nannou::app::Builder::new_async(move |app| Box::new(future::ready(model(app, shapes, args.render_interval))))
-        .update(update)
-        .simple_window(view)
-        .size(WINDOW_WIDTH, WINDOW_HEIGHT)
-        .run();
+    nannou::app::Builder::new_async(move |app| {
+        Box::new(future::ready(model(app, shapes, args.render_interval)))
+    })
+    .update(update)
+    .simple_window(view)
+    .size(WINDOW_WIDTH, WINDOW_HEIGHT)
+    .run();
 
     Ok(())
 }
