@@ -1,4 +1,4 @@
-use std::{rc::Rc};
+use std::rc::Rc;
 
 #[derive(Debug)]
 struct Circle {
@@ -12,22 +12,30 @@ struct Line {
     end: (i32, i32),
 }
 
-enum Nody {
-    Intersection,
-    Slot,
+#[derive(Clone)]
+enum Connectable {
+    Node(Rc<Node>),
+    Label(Rc<Label>),
 }
 
-struct Node {
+trait Coordinator {
+    fn get_coordinates(&self) -> (i32, i32);
+}
+
+struct Label {
+    coordinates: (i32,i32),
+    prev: Connectable,
+}
+
+struct Node{
     coordinates: (i32, i32),
-    nody: Nody,
-    prev_nodes: Vec<Rc<Node>>,
-    //content: Option<
+    prev: Vec<Connectable>,
 }
 
-impl Node {
+impl Node{
     fn get_lines(&self) -> Vec<Line> {
         let mut v = Vec::<Line>::new();
-        for n in self.prev_nodes.clone() {
+        for n in self.prev.clone() {
             v.push(Line {
                 start: self.coordinates,
                 end: n.coordinates,
@@ -42,7 +50,6 @@ impl Node {
         }
     }
 }
-
 
 pub fn example() {
     let node_a = Rc::new(Node {
