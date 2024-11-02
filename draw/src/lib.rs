@@ -38,10 +38,29 @@ pub struct Model {
 
 #[derive(Clone)]
 enum Shape {
-    Line { start: Point2, end: Point2, color: Rgba, weight: f32 },
-    Rectangle { position: Point2, width: f32, height: f32, color: Rgba },
-    Circle { position: Point2, radius: f32, color: Rgba },
-    Text { content: String, position: Point2, font_size: u32, color: Rgba },
+    Line {
+        start: Point2,
+        end: Point2,
+        color: Rgba,
+        weight: f32,
+    },
+    Rectangle {
+        position: Point2,
+        width: f32,
+        height: f32,
+        color: Rgba,
+    },
+    Circle {
+        position: Point2,
+        radius: f32,
+        color: Rgba,
+    },
+    Text {
+        content: String,
+        position: Point2,
+        font_size: u32,
+        color: Rgba,
+    },
 }
 
 pub fn model(app: &App) -> Model {
@@ -59,16 +78,35 @@ pub fn view(app: &App, model: &Model, frame: Frame) {
 
     for shape in &model.shapes {
         match shape {
-            Shape::Line { start, end, color, weight } => {
+            Shape::Line {
+                start,
+                end,
+                color,
+                weight,
+            } => {
                 draw_line(&draw, *start, *end, *color, *weight);
             }
-            Shape::Rectangle { position, width, height, color } => {
+            Shape::Rectangle {
+                position,
+                width,
+                height,
+                color,
+            } => {
                 draw_rectangle(&draw, *position, *width, *height, *color);
             }
-            Shape::Circle { position, radius, color } => {
+            Shape::Circle {
+                position,
+                radius,
+                color,
+            } => {
                 draw_circle(&draw, *position, *radius, *color);
             }
-            Shape::Text { content, position, font_size, color } => {
+            Shape::Text {
+                content,
+                position,
+                font_size,
+                color,
+            } => {
                 draw_text(&draw, content, *position, *font_size, *color);
             }
         }
@@ -90,38 +128,81 @@ fn generate_shapes() -> Vec<Shape> {
     let mut shapes = vec![];
 
     let num_shapes = rng.gen_range(5..=15);
-    
+
     for _ in 0..num_shapes {
         let shape_type = rng.gen_range(0..4);
 
         match shape_type {
-            0 => { // Line
+            0 => {
+                // Line
                 let start = pt2(rng.gen_range(-300.0..300.0), rng.gen_range(-300.0..300.0));
                 let end = pt2(rng.gen_range(-300.0..300.0), rng.gen_range(-300.0..300.0));
-                let color = rgba(rng.gen_range(0.0..1.0), rng.gen_range(0.0..1.0), rng.gen_range(0.0..1.0), 0.5);
+                let color = rgba(
+                    rng.gen_range(0.0..1.0),
+                    rng.gen_range(0.0..1.0),
+                    rng.gen_range(0.0..1.0),
+                    0.5,
+                );
                 let weight = rng.gen_range(1.0..5.0);
-                shapes.push(Shape::Line { start, end, color, weight });
-            },
-            1 => { // Rectangle
+                shapes.push(Shape::Line {
+                    start,
+                    end,
+                    color,
+                    weight,
+                });
+            }
+            1 => {
+                // Rectangle
                 let position = pt2(rng.gen_range(-300.0..300.0), rng.gen_range(-300.0..300.0));
                 let width = rng.gen_range(50.0..150.0);
                 let height = rng.gen_range(50.0..150.0);
-                let color = rgba(rng.gen_range(0.0..1.0), rng.gen_range(0.0..1.0), rng.gen_range(0.0..1.0), 0.5);
-                shapes.push(Shape::Rectangle { position, width, height, color });
-            },
-            2 => { // Circle
+                let color = rgba(
+                    rng.gen_range(0.0..1.0),
+                    rng.gen_range(0.0..1.0),
+                    rng.gen_range(0.0..1.0),
+                    0.5,
+                );
+                shapes.push(Shape::Rectangle {
+                    position,
+                    width,
+                    height,
+                    color,
+                });
+            }
+            2 => {
+                // Circle
                 let position = pt2(rng.gen_range(-300.0..300.0), rng.gen_range(-300.0..300.0));
                 let radius = rng.gen_range(20.0..75.0);
-                let color = rgba(rng.gen_range(0.0..1.0), rng.gen_range(0.0..1.0), rng.gen_range(0.0..1.0), 0.5);
-                shapes.push(Shape::Circle { position, radius, color });
-            },
-            3 => { // Text
+                let color = rgba(
+                    rng.gen_range(0.0..1.0),
+                    rng.gen_range(0.0..1.0),
+                    rng.gen_range(0.0..1.0),
+                    0.5,
+                );
+                shapes.push(Shape::Circle {
+                    position,
+                    radius,
+                    color,
+                });
+            }
+            3 => {
+                // Text
                 let position = pt2(rng.gen_range(-300.0..300.0), rng.gen_range(-300.0..300.0));
                 let font_size = rng.gen_range(24..=72);
-                let color = rgba(rng.gen_range(0.0..1.0), rng.gen_range(0.0..1.0), rng.gen_range(0.0..1.0), 0.5);
+                let color = rgba(
+                    rng.gen_range(0.0..1.0),
+                    rng.gen_range(0.0..1.0),
+                    rng.gen_range(0.0..1.0),
+                    0.5,
+                );
                 let content = "test".to_string();
-                shapes.push(Shape::Text { content, position, font_size, color });
-            },
+                shapes.push(Shape::Text {
+                    content,
+                    position,
+                    font_size,
+                    color,
+                });
+            }
             _ => {}
         }
     }

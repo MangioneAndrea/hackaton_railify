@@ -1,10 +1,13 @@
 use draw::*;
 
-use image::{Rgb};
+use image::Rgb;
 use imageproc::drawing::draw_hollow_circle_mut;
 
-use svg::Document;
+use nannou::draw::background::new;
+use nicola::{insert_svg, Edge, Node, Object};
+use svg::node::element;
 use svg::node::element::Rectangle;
+use svg::Document;
 
 use image::RgbImage;
 use pdfium_render::prelude::*;
@@ -89,6 +92,25 @@ fn main() -> anyhow::Result<()> {
     let image = &images[0];
     let svg = convert_image_to_svg(image);
     svg::save("output.svg", &svg).expect("Failed to save svg");
+
+    let mut svg_schema: Vec<element::Element> = Vec::new();
+
+    let edge = Edge {
+        start: (10, 20),
+        end: (30, 40),
+    };
+
+    let node = Node { x: 100, y: 140 };
+
+    insert_svg(&mut svg_schema, Object::Edge(edge));
+    insert_svg(&mut svg_schema, Object::Node(node));
+    let mut document = Document::new().set("viewBox", (0, 0, 300, 300));
+
+    for path in svg_schema {
+        document = document.add(path);
+    }
+
+    svg::save("nicola test.svg", &document).unwrap();
 
     nannou::app(model).update(update).simple_window(view).run();
 
