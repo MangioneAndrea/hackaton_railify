@@ -12,9 +12,14 @@ struct Line {
     end: (i32, i32),
 }
 
+trait SingleLiner {
+    fn get_line(&self) -> Line;
+}
+
 enum Connectable {
     Node(Rc<Node>),
     Label(Rc<Label>),
+    PinPoint(Rc<PinPoint>)
 }
 
 impl Connectable {
@@ -22,6 +27,21 @@ impl Connectable {
         match self {
             Connectable::Node(a) => a.coordinates,
             Connectable::Label(a) => a.coordinates,
+            Connectable::PinPoint(a) => a.coordinates,
+        }
+    }
+}
+
+struct PinPoint {
+    coordinates: (i32, i32),
+    prev: Connectable,
+}
+
+impl SingleLiner for PinPoint {
+    fn get_line(&self) -> Line {
+        Line{
+            start: self.coordinates,
+            end: self.prev.get_coordinates(),
         }
     }
 }
@@ -30,10 +50,6 @@ struct Label {
     coordinates: (i32, i32),
     prev: Connectable,
     label: String,
-}
-
-trait SingleLiner {
-    fn get_line(&self) -> Line;
 }
 
 impl SingleLiner for Label {
@@ -76,30 +92,47 @@ impl Node {
 
 pub fn example() {
     let node_1 = Rc::new(Node {
-        coordinates: (1, 1),
+        coordinates: (0, 0),
         prev: Vec::new(),
-    });
-    let node_2 = Rc::new(Node {
-        coordinates: (1, 1),
-        prev: vec![Connectable::Node(node_1.clone())],
-    });
-    let node_3 = Rc::new(Node {
-        coordinates: (1, 1),
-        prev: vec![Connectable::Node(node_2.clone())],
-    });
-    let node_4 = Rc::new(Node {
-        coordinates: (1, 1),
-        prev: vec![Connectable::N],
     });
 
     let new_label = Rc::new(Label {
-        coordinates: (2, 1),
-        prev: Connectable::Node(new_node.clone()),
+        coordinates: (1, 0),
+        prev: Connectable::Node(node_1.clone()),
         label: "Hello".to_string()
     });
 
-    println!("{:?}", new_node.get_circle());
-    println!("{:?}", new_node.get_lines());
-    println!("{:?}", new_label.get_line());
-    println!("{:?}", new_label.get_text());
+    let node_2 = Rc::new(Node {
+        coordinates: (2, 0),
+        prev: vec![Connectable::Label(new_label.clone())],
+    });
+    let node_3 = Rc::new(Node {
+        coordinates: (4, 1),
+        prev: vec![Connectable::Node(node_2.clone())],
+    });
+
+    let hi_label = Rc::new(Label {
+        coordinates: (5, 1),
+        prev: Connectable::Node(node_3.clone()),
+        label: "Hi".to_string()
+    });
+
+    let angle = Rc::new(PinPoint {
+        coordinates: (6,1),
+        prev: Connectable::Label(hi_label.clone())
+    });
+
+    let node_4 = Rc::new(Node {
+        coordinates: (7, 0),
+        prev: vec![Connectable::Node(node_2.clone()), Connectable::PinPoint(angle.clone())],
+    });
+
+
+    println!("node:\n\tcircle: {:?}\n\tlines: {:?}", node_1.get_circle(), node_1.get_lines());
+    println!("label:\n\tline: {:?}\n\ttext: {:?}", new_label.get_line(), new_label.get_text());
+    println!("node:\n\tcircle: {:?}\n\tlines: {:?}", node_2.get_circle(), node_2.get_lines());
+    println!("node:\n\tcircle: {:?}\n\tlines: {:?}", node_3.get_circle(), node_3.get_lines());
+    println!("label:\n\tline: {:?}\n\ttext: {:?}", hi_label.get_line(), hi_label.get_text());
+    println!("angle:\n\tline: {:?}", angle.get_line());
+    println!("node:\n\tcircle: {:?}\n\tlines: {:?}", node_4.get_circle(), node_4.get_lines());
 }
