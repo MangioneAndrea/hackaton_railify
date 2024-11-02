@@ -22,9 +22,13 @@ This project is written in Rust for the RAILIFY @ BaselHack 2024
    cargo run -- --input <input_path> --page <page_number> --render-interval <interval>
    ```
 
---input: Path to the input file (required).
---page: Page number to process (default: 0).
---render-interval: Interval for rerendering in seconds (default: 1.0).
+### Parameter
+- `--input`: Path to the input file (required).
+- `--page`: Page number to process (default: 0).
+- `--render-interval`: Interval for rerendering in seconds (default: 1.0).
+
 
 ### Example
+```sh
 cargo run -- --input ./assets/plans/ExamplePlan.pdf
+```
