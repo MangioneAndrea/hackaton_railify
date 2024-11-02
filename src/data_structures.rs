@@ -6,7 +6,6 @@ struct Circle {
     rad: i32,
 }
 
-
 #[derive(Debug)]
 struct Line {
     start: (i32, i32),
@@ -44,7 +43,8 @@ impl Node {
     }
 }
 
-fn main() {
+
+fn example() {
     println!("Hello, world!");
     let node_a = Rc::new(Node {
         coordinates: (1, 1),
@@ -70,26 +70,25 @@ fn main() {
     let node_e = Rc::new(Node {
         coordinates: (2, 2),
         nody: Nody::Intersection,
-        prev_nodes: vec![node_a, node_b],
+        prev_nodes: vec![node_a.clone(), node_b.clone()],
     });
     let node_f = Rc::new(Node {
         coordinates: (2, 4),
         nody: Nody::Intersection,
-        prev_nodes: vec![node_c, node_d],
+        prev_nodes: vec![node_c.clone(), node_d.clone()],
     });
 
     let node_g = Rc::new(Node {
         coordinates: (3, 4),
         nody: Nody::Intersection,
-        prev_nodes: vec![node_f, node_e],
+        prev_nodes: vec![node_f.clone(), node_e.clone()],
     });
-    let node_h = Node {
+    let node_h = Rc::new(Node {
         coordinates: (4, 4),
         nody: Nody::Intersection,
-        prev_nodes: vec![node_g],
-    };
+        prev_nodes: vec![node_g.clone()],
+    });
 
-    //println!("{:?}", node_h.get_circle());
     /*
     for l in node_h.get_lines() {
         println!("{:?}", l);
@@ -97,6 +96,8 @@ fn main() {
     }
     */
 
-    println!("{:?}", node_g.deref().get_lines());
-
+    println!("{:?}", node_h.get_circle());
+    println!("{:?}", node_g.get_circle());
+    println!("{:?}", node_g.get_lines());
+    println!("{:?}", node_e.get_lines());
 }
