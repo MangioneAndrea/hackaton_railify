@@ -2,3 +2,4 @@
 *.jpg
 /target
 .idea
+libpdfium.dylib
