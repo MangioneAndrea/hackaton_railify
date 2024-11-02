@@ -1,4 +1,8 @@
-use std::{rc::Rc};
+use std::rc::Rc;
+
+use svg::node::element;
+
+use crate::svg_helper;
 
 #[derive(Debug)]
 struct Circle {
@@ -12,15 +16,15 @@ struct Line {
     end: (i32, i32),
 }
 
-enum Nody {
+pub enum Nody {
     Intersection,
     Slot,
 }
 
-struct Node {
-    coordinates: (i32, i32),
-    nody: Nody,
-    prev_nodes: Vec<Rc<Node>>,
+pub struct Node {
+    pub coordinates: (i32, i32),
+    pub nody: Nody,
+    pub prev_nodes: Vec<Rc<Node>>,
     //content: Option<
 }
 
@@ -43,47 +47,46 @@ impl Node {
     }
 }
 
-
 pub fn example() {
     let node_a = Rc::new(Node {
-        coordinates: (1, 1),
+        coordinates: (50, 100),
         nody: Nody::Intersection,
         prev_nodes: Vec::new(),
     });
     let node_b = Rc::new(Node {
-        coordinates: (1, 2),
+        coordinates: (50, 200),
         nody: Nody::Intersection,
         prev_nodes: Vec::new(),
     });
     let node_c = Rc::new(Node {
-        coordinates: (1, 3),
+        coordinates: (50, 300),
         nody: Nody::Intersection,
         prev_nodes: Vec::new(),
     });
     let node_d = Rc::new(Node {
-        coordinates: (1, 4),
+        coordinates: (50, 400),
         nody: Nody::Intersection,
         prev_nodes: Vec::new(),
     });
 
     let node_e = Rc::new(Node {
-        coordinates: (2, 2),
+        coordinates: (400, 400),
         nody: Nody::Intersection,
         prev_nodes: vec![node_a.clone(), node_b.clone()],
     });
     let node_f = Rc::new(Node {
-        coordinates: (2, 4),
+        coordinates: (400, 600),
         nody: Nody::Intersection,
         prev_nodes: vec![node_c.clone(), node_d.clone()],
     });
 
     let node_g = Rc::new(Node {
-        coordinates: (3, 4),
+        coordinates: (600, 500),
         nody: Nody::Intersection,
         prev_nodes: vec![node_f.clone(), node_e.clone()],
     });
     let node_h = Rc::new(Node {
-        coordinates: (4, 4),
+        coordinates: (1000, 600),
         nody: Nody::Intersection,
         prev_nodes: vec![node_g.clone()],
     });
@@ -99,4 +102,18 @@ pub fn example() {
     println!("{:?}", node_g.get_circle());
     println!("{:?}", node_g.get_lines());
     println!("{:?}", node_e.get_lines());
+
+    let mut svg_schema: Vec<element::Element> = Vec::new();
+
+    svg_helper::insert_svg(&mut svg_schema, node_a);
+    svg_helper::insert_svg(&mut svg_schema, node_b);
+    svg_helper::insert_svg(&mut svg_schema, node_c);
+    svg_helper::insert_svg(&mut svg_schema, node_d);
+    svg_helper::insert_svg(&mut svg_schema, node_e);
+    svg_helper::insert_svg(&mut svg_schema, node_f);
+    svg_helper::insert_svg(&mut svg_schema, node_g);
+    svg_helper::insert_svg(&mut svg_schema, node_h);
+
+    svg_helper::save_and_draw_svg(&mut svg_schema);
+    // svg_helper::insert_svg(&mut svg_schema, Object::Node(node));
 }
