@@ -1,0 +1,9 @@
+[package]
+name = "svg_draw"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+svg = "0.18"
+image = "0.25"
+nalgebra = "0.33"

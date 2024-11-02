@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 draw = { path = "draw" }
+svg_draw = { path = "svg_draw" }
 image = "0.25.4"
 imageproc = "0.25.0"
 anyhow = "1.0.92"
@@ -13,3 +14,4 @@ pdf = "0.9.0"
 pdfium-render = "0.8.25"
 nannou = "0.19.0"
 svg = "0.18"
+nalgebra = "0.33"
