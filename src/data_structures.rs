@@ -1,4 +1,4 @@
-use std::{borrow::Borrow, collections::btree_set::Intersection, ops::Deref, rc::Rc};
+use std::{rc::Rc};
 
 #[derive(Debug)]
 struct Circle {
@@ -44,8 +44,7 @@ impl Node {
 }
 
 
-fn example() {
-    println!("Hello, world!");
+pub fn example() {
     let node_a = Rc::new(Node {
         coordinates: (1, 1),
         nody: Nody::Intersection,

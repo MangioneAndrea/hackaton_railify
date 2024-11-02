@@ -15,6 +15,8 @@ use std::path::{Path, PathBuf};
 
 use clap::Parser;
 
+mod data_structures;
+
 enum EasyColor {
     Red,
     Green,
@@ -115,6 +117,9 @@ fn main() -> anyhow::Result<()> {
     nannou::app(model).update(update).simple_window(view).run();
 
     dbg!(images[0][(0, 0)]);
+
+
+    data_structures::example();
 
     Ok(())
 }
