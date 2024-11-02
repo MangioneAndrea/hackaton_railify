@@ -1,7 +1,8 @@
 use core::{f32, panic};
 use std::usize;
 
-use image::RgbImage;
+use image::{GenericImageView, RgbImage};
+use imageproc::drawing::Canvas;
 use nannou::glam::Vec2;
 
 #[derive(Clone, Debug)]
@@ -73,7 +74,7 @@ fn horizzontal_lines_from_image(img: &mut RgbImage) -> Vec<Shape> {
     const MIN_LINE_LEN: usize = 20;
 
     // y , x0, x1
-    let mut horizzontal_lines: Vec<(usize, usize, usize)> = vec![];
+    let mut horizzontal_lines: Vec<(usize, usize, usize, usize)> = vec![];
 
     let mut min_x = usize::MAX;
     let mut min_y = usize::MAX;
@@ -104,7 +105,7 @@ fn horizzontal_lines_from_image(img: &mut RgbImage) -> Vec<Shape> {
                         min_x = min_x.min(a as usize);
                         min_y = min_y.min(num as usize);
 
-                        horizzontal_lines.push((num as usize, a, x as usize - 1));
+                        horizzontal_lines.push((num as usize, a, x as usize - 1, y as usize));
                     }
                     prev = None
                 }
@@ -114,7 +115,7 @@ fn horizzontal_lines_from_image(img: &mut RgbImage) -> Vec<Shape> {
 
     for line in &mut horizzontal_lines {
         for point in line.1..line.2 {
-            let pixel = img.get_pixel_mut(point as _, line.0 as _);
+            let pixel = img.get_pixel_mut(point as _, line.3 as _);
             pixel.0 = [255, 255, 255];
         }
 
@@ -176,14 +177,15 @@ fn horizzontal_lines_from_image(img: &mut RgbImage) -> Vec<Shape> {
     return lines;
 }
 
-fn diagonal_lines_from_image(img: &mut RgbImage) -> Vec<Shape> {
-    return vec![];
+fn extract_shape(img: &mut RgbImage) -> Shape {
+    todo!()
 }
+
 
 pub fn shapes_from_image(img: &mut RgbImage) -> Vec<Shape> {
     let lines = horizzontal_lines_from_image(img);
 
-    let diagonals = diagonal_lines_from_image(img);
+    // let diagonals = diagonal_lines_from_image(img);
 
     lines
 }
