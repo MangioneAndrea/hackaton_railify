@@ -16,10 +16,10 @@ trait SingleLiner {
     fn get_line(&self) -> Line;
 }
 
-enum Connectable {
+pub enum Connectable {
     Node(Rc<Node>),
     Label(Rc<Label>),
-    PinPoint(Rc<PinPoint>)
+    PinPoint(Rc<PinPoint>),
 }
 
 impl Connectable {
@@ -32,14 +32,14 @@ impl Connectable {
     }
 }
 
-struct PinPoint {
-    coordinates: (i32, i32),
-    prev: Connectable,
+pub struct PinPoint {
+    pub coordinates: (i32, i32),
+    pub prev: Connectable,
 }
 
 impl SingleLiner for PinPoint {
     fn get_line(&self) -> Line {
-        Line{
+        Line {
             start: self.coordinates,
             end: self.prev.get_coordinates(),
         }
@@ -66,9 +66,9 @@ impl Label {
     }
 }
 
-struct Node {
-    coordinates: (i32, i32),
-    prev: Vec<Connectable>,
+pub struct Node {
+    pub coordinates: (i32, i32),
+    pub prev: Vec<Connectable>,
 }
 
 impl Node {
@@ -99,7 +99,7 @@ pub fn example() {
     let new_label = Rc::new(Label {
         coordinates: (1, 0),
         prev: Connectable::Node(node_1.clone()),
-        label: "Hello".to_string()
+        label: "Hello".to_string(),
     });
 
     let node_2 = Rc::new(Node {
@@ -114,25 +114,51 @@ pub fn example() {
     let hi_label = Rc::new(Label {
         coordinates: (5, 1),
         prev: Connectable::Node(node_3.clone()),
-        label: "Hi".to_string()
+        label: "Hi".to_string(),
     });
 
     let angle = Rc::new(PinPoint {
-        coordinates: (6,1),
-        prev: Connectable::Label(hi_label.clone())
+        coordinates: (6, 1),
+        prev: Connectable::Label(hi_label.clone()),
     });
 
     let node_4 = Rc::new(Node {
         coordinates: (7, 0),
-        prev: vec![Connectable::Node(node_2.clone()), Connectable::PinPoint(angle.clone())],
+        prev: vec![
+            Connectable::Node(node_2.clone()),
+            Connectable::PinPoint(angle.clone()),
+        ],
     });
 
-
-    println!("node:\n\tcircle: {:?}\n\tlines: {:?}", node_1.get_circle(), node_1.get_lines());
-    println!("label:\n\tline: {:?}\n\ttext: {:?}", new_label.get_line(), new_label.get_text());
-    println!("node:\n\tcircle: {:?}\n\tlines: {:?}", node_2.get_circle(), node_2.get_lines());
-    println!("node:\n\tcircle: {:?}\n\tlines: {:?}", node_3.get_circle(), node_3.get_lines());
-    println!("label:\n\tline: {:?}\n\ttext: {:?}", hi_label.get_line(), hi_label.get_text());
+    println!(
+        "node:\n\tcircle: {:?}\n\tlines: {:?}",
+        node_1.get_circle(),
+        node_1.get_lines()
+    );
+    println!(
+        "label:\n\tline: {:?}\n\ttext: {:?}",
+        new_label.get_line(),
+        new_label.get_text()
+    );
+    println!(
+        "node:\n\tcircle: {:?}\n\tlines: {:?}",
+        node_2.get_circle(),
+        node_2.get_lines()
+    );
+    println!(
+        "node:\n\tcircle: {:?}\n\tlines: {:?}",
+        node_3.get_circle(),
+        node_3.get_lines()
+    );
+    println!(
+        "label:\n\tline: {:?}\n\ttext: {:?}",
+        hi_label.get_line(),
+        hi_label.get_text()
+    );
     println!("angle:\n\tline: {:?}", angle.get_line());
-    println!("node:\n\tcircle: {:?}\n\tlines: {:?}", node_4.get_circle(), node_4.get_lines());
+    println!(
+        "node:\n\tcircle: {:?}\n\tlines: {:?}",
+        node_4.get_circle(),
+        node_4.get_lines()
+    );
 }

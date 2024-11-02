@@ -1,3 +1,4 @@
+use data_structures::{Connectable, Node, PinPoint};
 use draw::{model, update, view, WINDOW_HEIGHT, WINDOW_WIDTH};
 use image::Rgb;
 use imageproc::drawing::draw_hollow_circle_mut;
@@ -11,13 +12,13 @@ use pdfium_render::prelude::*;
 use std::{
     future,
     path::{Path, PathBuf},
+    rc::Rc,
 };
 
 use clap::Parser;
 
 mod data_structures;
 mod shape_finder;
-
 
 enum EasyColor {
     Red,
@@ -66,9 +67,6 @@ struct Args {
 }
 
 fn main() -> anyhow::Result<()> {
-
-    data_structures::example();
-
     let args = Args::parse();
 
     let mut images = pdf_images(&args.input, None)?;
@@ -77,7 +75,9 @@ fn main() -> anyhow::Result<()> {
     let lines = shape_finder::shapes_from_image(img);
 
     mark_all_unresolved_pixels(img);
-    images[args.page as usize].save("non-resolved-parts.png").expect("Failed to save image");
+    images[args.page as usize]
+        .save("non-resolved-parts.png")
+        .expect("Failed to save image");
 
     let shapes: Vec<_> = lines
         .into_iter()
@@ -88,6 +88,20 @@ fn main() -> anyhow::Result<()> {
                 color: rgba(0., 0., 0., 1.),
                 weight: l.thickness,
             }],
+            shape_finder::Shape::Point(p, pinpoint) if pinpoint => {
+                vec![draw::Shape::Circle { 
+                    position: Vec2::new(p.0 as _, p.1 as _),
+                    color: rgba(0., 255., 0., 1.),
+                    radius: 20.
+                }]
+            },
+            shape_finder::Shape::Point(p, _) => {
+                vec![draw::Shape::Circle { 
+                    position: Vec2::new(p.0 as _, p.1 as _),
+                    color: rgba(0., 0., 255., 1.),
+                    radius: 20.
+                }]
+            }
             shape_finder::Shape::Custom(pixels) => pixels
                 .iter()
                 .map(|p| draw::Shape::Point {
@@ -98,6 +112,24 @@ fn main() -> anyhow::Result<()> {
         })
         .collect();
 
+
+    //let nodes: Vec<_> = lines
+    //    .iter()
+    //    .filter_map(|s| match s {
+    //        shape_finder::Shape::Point(p, pinpoint) if *pinpoint => {
+    //            Some(Connectable::PinPoint(Rc::new(PinPoint {
+    //                coordinates: (p.0 as _, p.1 as _),
+    //                prev: todo!(),
+    //            })))
+    //        }
+    //        shape_finder::Shape::Point(p, _) => Some(Connectable::Node(Rc::new(Node {
+    //            coordinates: (p.0 as _, p.1 as _),
+    //            prev: vec![],
+    //        }))),
+    //        _ => None,
+    //    })
+    //    .collect();
+    //
     nannou::app::Builder::new_async(move |app| {
         Box::new(future::ready(model(app, shapes, args.render_interval)))
     })
@@ -163,8 +195,7 @@ fn pdf_images(
 
     let document = pdfium.load_pdf_from_file(path, password)?;
 
-    let render_config = PdfRenderConfig::new()
-        .set_target_width(800);
+    let render_config = PdfRenderConfig::new().set_target_width(800);
 
     let mut images = vec![];
     for (_, page) in document.pages().iter().enumerate() {
