@@ -160,9 +160,8 @@ fn pdf_images(
     let document = pdfium.load_pdf_from_file(path, password)?;
 
     let render_config = PdfRenderConfig::new()
-        .set_target_width(2000)
-        .set_maximum_height(2000)
-        .rotate_if_landscape(PdfPageRenderRotation::Degrees90, true);
+        .set_target_width(5000)
+        .set_maximum_height(5000);
 
     let mut images = vec![];
     for (_, page) in document.pages().iter().enumerate() {
