@@ -31,6 +31,13 @@ pub fn draw_text(draw: &Draw, text: &str, position: Point2, font_size: u32, colo
         .color(color);
 }
 
+pub fn draw_point(draw: &Draw, position: Point2, color: Rgba) {
+    draw.ellipse()
+        .x_y(position.x, position.y)
+        .radius(1.0)
+        .color(color);
+}
+
 pub struct Model {
     last_update: Instant,
     shapes: Vec<Shape>,
@@ -42,6 +49,7 @@ enum Shape {
     Rectangle { position: Point2, width: f32, height: f32, color: Rgba },
     Circle { position: Point2, radius: f32, color: Rgba },
     Text { content: String, position: Point2, font_size: u32, color: Rgba },
+    Point { position: Point2, color: Rgba },
 }
 
 pub fn model(app: &App) -> Model {
@@ -71,6 +79,9 @@ pub fn view(app: &App, model: &Model, frame: Frame) {
             Shape::Text { content, position, font_size, color } => {
                 draw_text(&draw, content, *position, *font_size, *color);
             }
+            Shape::Point { position, color } => {
+                draw_point(&draw, *position, *color);
+            }
         }
     }
 
@@ -92,7 +103,7 @@ fn generate_shapes() -> Vec<Shape> {
     let num_shapes = rng.gen_range(5..=15);
     
     for _ in 0..num_shapes {
-        let shape_type = rng.gen_range(0..4);
+        let shape_type = rng.gen_range(0..5);
 
         match shape_type {
             0 => { // Line
@@ -121,6 +132,11 @@ fn generate_shapes() -> Vec<Shape> {
                 let color = rgba(rng.gen_range(0.0..1.0), rng.gen_range(0.0..1.0), rng.gen_range(0.0..1.0), 0.5);
                 let content = "test".to_string();
                 shapes.push(Shape::Text { content, position, font_size, color });
+            },
+            4 => { // Point
+                let position = pt2(rng.gen_range(-300.0..300.0), rng.gen_range(-300.0..300.0));
+                let color = rgba(rng.gen_range(0.0..1.0), rng.gen_range(0.0..1.0), rng.gen_range(0.0..1.0), 0.5);
+                shapes.push(Shape::Point { position, color });
             },
             _ => {}
         }
