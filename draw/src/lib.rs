@@ -1,13 +1,13 @@
 use nannou::prelude::*;
 use std::time::Instant;
 
-const WINDOW_WIDTH: f32 = 800.0;
-const WINDOW_HEIGHT: f32 = 800.0;
+pub const WINDOW_WIDTH: u32 = 800;
+pub const WINDOW_HEIGHT: u32 = 800;
 
 fn calculate_single_grid_position(point: Point2, spacing: f32, center: Point2) -> Point2 {
     // Calculate the (x, y) position for the specified grid point
-    let x: f32 = center.x + (point.x - WINDOW_WIDTH / (2.0 * spacing)) * spacing;
-    let y = center.y + (point.y - WINDOW_HEIGHT / (2.0 * spacing)) * spacing;
+    let x: f32 = center.x + (point.x as f32 - (WINDOW_WIDTH as f32 / (2.0 * spacing))) * spacing;
+    let y: f32 = center.y + (point.y as f32 - (WINDOW_HEIGHT as f32 / (2.0 * spacing))) * spacing;
     Point2::new(x, y)
 }
 

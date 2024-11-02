@@ -1,4 +1,4 @@
-use draw::{model, update, view};
+use draw::{model, update, view, WINDOW_HEIGHT, WINDOW_WIDTH};
 use image::Rgb;
 use imageproc::drawing::draw_hollow_circle_mut;
 
@@ -88,6 +88,7 @@ fn main() -> anyhow::Result<()> {
     nannou::app::Builder::new_async(move |app| Box::new(future::ready(model(app, shapes, args.render_interval))))
         .update(update)
         .simple_window(view)
+        .size(WINDOW_WIDTH, WINDOW_HEIGHT)
         .run();
 
     Ok(())
@@ -130,8 +131,8 @@ fn pdf_images(
     let document = pdfium.load_pdf_from_file(path, password)?;
 
     let render_config = PdfRenderConfig::new()
-        .set_target_width(5000)
-        .set_maximum_height(5000);
+        .set_target_width(2480)
+        .set_maximum_height(3508);
 
     let mut images = vec![];
     for (_, page) in document.pages().iter().enumerate() {
