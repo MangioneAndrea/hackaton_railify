@@ -1,4 +1,14 @@
+# Ignore image files
 *.png
 *.jpg
-/target
+*.svg
+
+# Ignore target directory
+target/
+
+# Ignore IDE settings and files
+.idea/
+.vscode/
+
+# Ignore compiled files for macOS (M1, M2...)
 libpdfium.dylib
