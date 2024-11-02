@@ -68,7 +68,7 @@ fn main() -> anyhow::Result<()> {
 
     let mut images = pdf_images(&args.input, None)?;
 
-    let lines = shape_finder::shapes_from_image(&images[0]);
+    let lines = shape_finder::shapes_from_image(&mut images[0]);
 
     let shapes: Vec<_> = lines
         .into_iter()

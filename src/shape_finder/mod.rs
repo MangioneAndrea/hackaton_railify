@@ -67,16 +67,10 @@ impl Shape {
     }
 }
 
-struct Cell {}
-
-struct Canvas {
-    v: Vec<Vec<Cell>>,
-}
-
 const THRESHOLD: u8 = 200;
 
-pub fn shapes_from_image(img: &RgbImage) -> Vec<Shape> {
-    const MIN_LINE_LEN: usize = 100;
+fn horizzontal_lines_from_image(img: &mut RgbImage) -> Vec<Shape> {
+    const MIN_LINE_LEN: usize = 20;
 
     // y , x0, x1
     let mut horizzontal_lines: Vec<(usize, usize, usize)> = vec![];
@@ -119,10 +113,14 @@ pub fn shapes_from_image(img: &RgbImage) -> Vec<Shape> {
     }
 
     for line in &mut horizzontal_lines {
+        for point in line.1..line.2 {
+            let pixel = img.get_pixel_mut(point as _, line.0 as _);
+            pixel.0 = [255, 255, 255];
+        }
+
         line.0 -= min_y;
         line.1 -= min_x;
         line.2 -= min_x;
-        println!("{} {} {}", line.0, line.1, line.2);
     }
 
     // merge all the lines
@@ -163,9 +161,6 @@ pub fn shapes_from_image(img: &RgbImage) -> Vec<Shape> {
 
                 next = next.merge_with(peek);
             } else {
-                if let Shape::Line(l) = next.clone() {
-                    println!("aaaaaaa{}", l.thickness);
-                }
                 lines.push(next.clone());
                 next = iter.next().unwrap().clone();
             }
@@ -179,4 +174,16 @@ pub fn shapes_from_image(img: &RgbImage) -> Vec<Shape> {
     }
 
     return lines;
+}
+
+fn diagonal_lines_from_image(img: &mut RgbImage) -> Vec<Shape> {
+    return vec![];
+}
+
+pub fn shapes_from_image(img: &mut RgbImage) -> Vec<Shape> {
+    let lines = horizzontal_lines_from_image(img);
+
+    let diagonals = diagonal_lines_from_image(img);
+
+    lines
 }
