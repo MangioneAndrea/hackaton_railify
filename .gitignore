@@ -9,6 +9,7 @@ target/
 # Ignore IDE settings and files
 .idea/
 .vscode/
+.DS_Store
 
 # Ignore compiled files for macOS (M1, M2...)
 libpdfium.dylib
