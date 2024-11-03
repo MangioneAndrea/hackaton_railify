@@ -1,12 +1,41 @@
 <svg viewBox="0 0 3000 2000" xmlns="http://www.w3.org/2000/svg">
-<circle cx="100" cy="100" fill="blue" r="8"/>
-<text fill="black" x="300" y="200">Hello</text>
-<line stroke="black" x1="300" x2="100" y1="200" y2="100"/>
-<circle cx="400" cy="300" fill="blue" r="8"/>
-<line stroke="black" x1="400" x2="300" y1="300" y2="200"/>
-<circle cx="600" cy="400" fill="blue" r="8"/>
-<line stroke="black" x1="600" x2="400" y1="400" y2="300"/>
-<text fill="black" x="1000" y="500">Hi</text>
-<line stroke="black" x1="1000" x2="600" y1="500" y2="400"/>
-<line stroke="black" x1="1400" x2="1000" y1="500" y2="500"/>
+<circle cx="400" cy="58" fill="blue" r="8"/>
+<line stroke="black" x1="400" x2="373" y1="58" y2="101"/>
+<line stroke="black" x1="400" x2="373" y1="58" y2="101"/>
+<line stroke="black" x1="400" x2="373" y1="58" y2="101"/>
+<circle cx="573" cy="59" fill="blue" r="8"/>
+<line stroke="black" x1="573" x2="400" y1="59" y2="58"/>
+<line stroke="black" x1="573" x2="547" y1="59" y2="103"/>
+<line stroke="black" x1="573" x2="547" y1="59" y2="103"/>
+<circle cx="21" cy="103" fill="blue" r="8"/>
+<circle cx="373" cy="101" fill="blue" r="8"/>
+<line stroke="black" x1="373" x2="21" y1="101" y2="103"/>
+<circle cx="547" cy="103" fill="blue" r="8"/>
+<line stroke="black" x1="547" x2="373" y1="103" y2="101"/>
+<line stroke="black" x1="547" x2="373" y1="103" y2="101"/>
+<line stroke="black" x1="547" x2="373" y1="103" y2="101"/>
+<circle cx="373" cy="101" fill="blue" r="8"/>
+<line stroke="black" x1="373" x2="21" y1="101" y2="103"/>
+<circle cx="573" cy="59" fill="blue" r="8"/>
+<line stroke="black" x1="573" x2="400" y1="59" y2="58"/>
+<line stroke="black" x1="573" x2="547" y1="59" y2="103"/>
+<line stroke="black" x1="573" x2="547" y1="59" y2="103"/>
+<circle cx="789" cy="58" fill="blue" r="8"/>
+<line stroke="black" x1="789" x2="573" y1="58" y2="59"/>
+<line stroke="black" x1="789" x2="573" y1="58" y2="59"/>
+<line stroke="black" x1="789" x2="573" y1="58" y2="59"/>
+<circle cx="373" cy="101" fill="blue" r="8"/>
+<line stroke="black" x1="373" x2="21" y1="101" y2="103"/>
+<circle cx="547" cy="103" fill="blue" r="8"/>
+<line stroke="black" x1="547" x2="373" y1="103" y2="101"/>
+<line stroke="black" x1="547" x2="373" y1="103" y2="101"/>
+<line stroke="black" x1="547" x2="373" y1="103" y2="101"/>
+<circle cx="573" cy="59" fill="blue" r="8"/>
+<line stroke="black" x1="573" x2="400" y1="59" y2="58"/>
+<line stroke="black" x1="573" x2="547" y1="59" y2="103"/>
+<line stroke="black" x1="573" x2="547" y1="59" y2="103"/>
+<circle cx="399" cy="59" fill="blue" r="8"/>
+<line stroke="black" x1="399" x2="373" y1="59" y2="101"/>
+<line stroke="black" x1="399" x2="373" y1="59" y2="101"/>
+<line stroke="black" x1="399" x2="373" y1="59" y2="101"/>
 </svg>

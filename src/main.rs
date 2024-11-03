@@ -7,6 +7,8 @@ use nannou::{color::rgba, glam::Vec2};
 use svg::node::element::Rectangle;
 use svg::Document;
 
+use svg::node::element;
+
 use image::RgbImage;
 use pdfium_render::prelude::*;
 use std::{
@@ -69,7 +71,7 @@ struct Args {
 }
 
 fn main() -> anyhow::Result<()> {
-    data_structures::example();
+    // data_structures::example();
 
     let args = Args::parse();
 
@@ -97,14 +99,14 @@ fn main() -> anyhow::Result<()> {
                 vec![draw::Shape::Circle {
                     position: Vec2::new(p.0 as _, p.1 as _),
                     color: rgba(0., 255., 0., 1.),
-                    radius: 20.,
+                    radius: 10.,
                 }]
             }
             shape_finder::Shape::Point(p, prevs, _) => {
                 vec![draw::Shape::Circle {
                     position: Vec2::new(p.0 as _, p.1 as _),
                     color: rgba(0., 0., 255., 1.),
-                    radius: 20.,
+                    radius: 10.,
                 }]
             }
             shape_finder::Shape::Custom(pixels) => pixels
@@ -169,6 +171,13 @@ fn main() -> anyhow::Result<()> {
             _ => None,
         })
         .collect();
+
+    let mut svg_schema: Vec<element::Element> = Vec::new();
+
+    for node in nodes {
+        svg_helper::insert_svg(&mut svg_schema, Connectable::Node(node.0));
+    }
+    svg_helper::save_and_draw_svg(&mut svg_schema);
 
     nannou::app::Builder::new_async(move |app| {
         Box::new(future::ready(model(app, shapes, args.render_interval)))
