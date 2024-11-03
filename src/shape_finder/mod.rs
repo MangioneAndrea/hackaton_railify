@@ -1,12 +1,12 @@
 use core::{f32, panic};
-use std::{collections::HashMap, usize};
+use std::{cmp::Ordering, collections::HashMap, usize};
 
-use image::{GenericImageView, RgbImage};
-use imageproc::drawing::Canvas;
-use nannou::glam::Vec2;
-use svg::node::element::tag::Line;
+use image::RgbImage;
+use iter_tools::Itertools;
+use nalgebra::ComplexField;
+use nannou::{glam::Vec2, prelude::Float};
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, PartialOrd)]
 pub struct Point(pub f32, pub f32);
 
 impl Into<Vec2> for Point {
@@ -21,11 +21,42 @@ impl Point {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Line {
     pub start: Point,
     pub end: Point,
     pub thickness: f32,
+}
+
+impl Point {
+    pub fn distance(&self, other: &Point) -> f32 {
+        ((self.0 - other.0).powi(2) + (self.1 - other.1).powi(2)).sqrt()
+    }
+}
+
+impl Line {
+    pub fn distance_to_point(&self, point: &Point) -> f32 {
+        let (px, py) = (point.0, point.1);
+        let (ax, ay) = (self.start.0, self.start.1);
+        let (bx, by) = (self.end.0, self.end.1);
+
+        let abx = bx - ax;
+        let aby = by - ay;
+        let apx = px - ax;
+        let apy = py - ay;
+
+        // Compute the projection of AP onto AB, clamped to [0, 1]
+        let ab_square = abx * abx + aby * aby;
+        let dot_product = apx * abx + apy * aby;
+        let t = (dot_product / ab_square).clamp(0.0, 1.0);
+
+        // Closest point on the segment to the given point
+        let closest_x = ax + t * abx;
+        let closest_y = ay + t * aby;
+
+        // Distance between the point and the closest point on the segment
+        Point(px, py).distance(&Point(closest_x, closest_y))
+    }
 }
 
 impl TryFrom<Vec<(usize, usize)>> for Line {
@@ -47,9 +78,7 @@ impl TryFrom<Vec<(usize, usize)>> for Line {
 
         // dbg!(map.clone());
 
-        println!("{} {min} {max}", max - min);
-
-        if max - min < 5 {
+        if max - min < 3 {
             map.clear();
 
             for (x, y) in &value {
@@ -64,7 +93,7 @@ impl TryFrom<Vec<(usize, usize)>> for Line {
             let min = values.clone().min().ok_or(())?;
             let max = values.max().ok_or(())?;
 
-            if max - min < 5 {
+            if max - min < 4 {
                 let min_x = value.iter().map(|(x, _)| x).min().unwrap();
                 let max_x = value.iter().map(|(x, _)| x).max().unwrap();
                 let min_y = value.iter().map(|(_, y)| y).min().unwrap();
@@ -102,9 +131,10 @@ impl Line {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Shape {
     Line(Line),
+    Point(Point, Vec<Point>, bool),
     Custom(Vec<(usize, usize)>),
 }
 
@@ -127,7 +157,7 @@ impl Shape {
 const THRESHOLD: u8 = 200;
 
 fn horizzontal_lines_from_image(img: &mut RgbImage) -> Vec<Shape> {
-    const MIN_LINE_LEN: usize = 20;
+    const MIN_LINE_LEN: usize = 200;
 
     // y , x0, x1
     let mut horizzontal_lines: Vec<(usize, usize, usize, usize)> = vec![];
@@ -135,13 +165,14 @@ fn horizzontal_lines_from_image(img: &mut RgbImage) -> Vec<Shape> {
     let mut min_x = usize::MAX;
     let mut min_y = usize::MAX;
 
-    for (num, (_, row)) in img
+    for (mut num, (_, row)) in img
         .enumerate_rows()
         .collect::<Vec<_>>()
         .into_iter()
         .rev()
         .enumerate()
     {
+        num += 3;
         let mut prev: Option<usize> = None;
         for (x, y, c) in row {
             //if c[0] == 255 && c[1] == 255 && c[2] == 255 {
@@ -262,7 +293,7 @@ fn extract_shapes(img: &mut RgbImage) -> Vec<Shape> {
             if c[0] < THRESHOLD && c[1] < THRESHOLD && c[2] < THRESHOLD {
                 let shape = extract_shape(img, x as _, y as _);
 
-                if shape.len() > 50 {
+                if shape.len() > 50 && shape.len() < 200 {
                     res.push(
                         Line::try_from(shape.clone())
                             .map(|l| Shape::Line(l))
@@ -276,14 +307,136 @@ fn extract_shapes(img: &mut RgbImage) -> Vec<Shape> {
     res
 }
 
+pub fn split_line(line: &Line, points: Vec<Point>) -> Vec<Line> {
+    let mut points: Vec<_> = points
+        .into_iter()
+        .filter(|p| /*&line.start != *p && &line.end != *p &&*/ line.distance_to_point(p) < 5.)
+        .collect();
+
+    points.push(line.start.clone());
+    points.push(line.end.clone());
+
+    points.sort_by(|a, b| a.partial_cmp(b).unwrap());
+
+    let mut res = vec![];
+    let mut iter = points.iter().peekable();
+    let mut pivot = iter.next();
+    while let Some(mut peek) = iter.peek() {
+        let mut start = pivot.unwrap();
+        if start.distance(peek) > 3. {
+            match start.partial_cmp(&peek).unwrap() {
+                Ordering::Less => {
+                    res.push(Line {
+                        start: start.clone().clone(),
+                        end: peek.clone().clone().clone(),
+                        thickness: line.thickness,
+                    });
+                }
+                _ => {
+                    res.push(Line {
+                        end: start.clone().clone(),
+                        start: peek.clone().clone().clone(),
+                        thickness: line.thickness,
+                    });
+                }
+            };
+        }
+        pivot = iter.next();
+    }
+
+    res
+}
+
 pub fn shapes_from_image(img: &mut RgbImage) -> Vec<Shape> {
-    let mut lines = horizzontal_lines_from_image(img);
+    let mut figures = horizzontal_lines_from_image(img);
 
     let diagonals = extract_shapes(img);
 
-    println!("{}", diagonals.len());
+    figures.extend(diagonals);
 
-    lines.extend(diagonals);
+    let mut points = vec![];
 
-    lines
+    for figure in &figures {
+        match figure {
+            Shape::Line(Line { start, end, .. }) => {
+                points.push(start.clone());
+                points.push(end.clone());
+            }
+            _ => {}
+        }
+    }
+
+    let mut real_lines = vec![];
+
+    for figure in &figures {
+        match figure {
+            Shape::Line(line) => real_lines.extend(split_line(&line, points.clone())),
+            _ => {}
+        }
+    }
+
+    real_lines = real_lines
+        .into_iter()
+        .filter(|l| l.thickness > 1.)
+        .collect();
+
+    let mut points: Vec<_> = real_lines.iter().map(|l| l.start.clone()).collect();
+    let points2: Vec<_> = real_lines.iter().map(|l| l.end.clone()).collect();
+
+    points.extend(points2);
+
+    let mut new_points = vec![];
+
+    for point in points {
+        let cns: Vec<_> = real_lines
+            .iter()
+            .filter(|line| line.end == point)
+            .map(|line| line.start.clone())
+            .collect();
+
+        new_points.push((point, cns));
+    }
+
+    let mut real_lines: Vec<_> = real_lines.iter().map(|l| Shape::Line(l.clone())).collect();
+
+    let mut points = vec![];
+    for (a, mut cns) in new_points.clone() {
+        let mut count = 0;
+        for (b, cns2) in &new_points {
+            if &a == b {
+                cns.extend(cns2.clone());
+                count += 1;
+                continue;
+            }
+
+            let diff = (a.0 - b.0).abs() + (a.1 - b.1).abs();
+
+            if diff.abs() < 20. {
+                cns.extend(cns2.clone());
+                count += 1;
+            }
+
+            cns = cns
+                .into_iter()
+                .unique_by(|f| (f.0 as usize, f.1 as usize))
+                .collect();
+        }
+        if count == 2 {
+            points.push((a, cns, true));
+        } else {
+            points.push((a, cns, false));
+        }
+    }
+
+    let points: Vec<_> = points
+        .into_iter()
+        .map(|p| Shape::Point(p.0.clone(), p.1.clone(), p.2))
+        .collect();
+    real_lines.extend(points);
+
+    for el in &real_lines {
+        println!("{:?}", el);
+    }
+
+    real_lines
 }

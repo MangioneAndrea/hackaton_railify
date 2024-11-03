@@ -1,0 +1,12 @@
+<svg viewBox="0 0 3000 2000" xmlns="http://www.w3.org/2000/svg">
+<circle cx="100" cy="100" fill="blue" r="8"/>
+<text fill="black" x="300" y="200">Hello</text>
+<line stroke="black" x1="300" x2="100" y1="200" y2="100"/>
+<circle cx="500" cy="200" fill="blue" r="8"/>
+<line stroke="black" x1="500" x2="300" y1="200" y2="200"/>
+<circle cx="700" cy="400" fill="blue" r="8"/>
+<line stroke="black" x1="700" x2="500" y1="400" y2="200"/>
+<text fill="black" x="1000" y="500">Hi</text>
+<line stroke="black" x1="1000" x2="700" y1="500" y2="400"/>
+<line stroke="black" x1="1200" x2="1000" y1="1000" y2="500"/>
+</svg>

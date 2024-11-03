@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::{cell::RefCell, rc::Rc};
 
 use svg::node::element;
 
@@ -21,7 +21,11 @@ pub trait SingleLiner {
 }
 
 pub enum Connectable {
+<<<<<<< HEAD
     Node(Rc<Node>),
+=======
+    Node(Rc<RefCell<Node>>),
+>>>>>>> master
     Label(Rc<Label>),
     PinPoint(Rc<PinPoint>),
 }
@@ -29,7 +33,7 @@ pub enum Connectable {
 impl Connectable {
     pub fn get_coordinates(&self) -> (i32, i32) {
         match self {
-            Connectable::Node(a) => a.coordinates,
+            Connectable::Node(a) => a.borrow().coordinates,
             Connectable::Label(a) => a.coordinates,
             Connectable::PinPoint(a) => a.coordinates,
         }
@@ -37,8 +41,13 @@ impl Connectable {
 }
 
 pub struct PinPoint {
+<<<<<<< HEAD
     coordinates: (i32, i32),
     prev: Connectable,
+=======
+    pub coordinates: (i32, i32),
+    pub prev: Connectable,
+>>>>>>> master
 }
 
 impl SingleLiner for PinPoint {
@@ -71,8 +80,8 @@ impl Label {
 }
 
 pub struct Node {
-    coordinates: (i32, i32),
-    prev: Vec<Connectable>,
+    pub coordinates: (i32, i32),
+    pub prev: Vec<Connectable>,
 }
 
 impl Node {
@@ -95,10 +104,10 @@ impl Node {
 }
 
 pub fn example() {
-    let node_1 = Rc::new(Node {
-        coordinates: (100, 100),
+    let node_1 = Rc::new(RefCell::new(Node {
+        coordinates: (0, 0),
         prev: Vec::new(),
-    });
+    }));
 
     let new_label = Rc::new(Label {
         coordinates: (300, 200),
@@ -106,14 +115,14 @@ pub fn example() {
         label: "Hello".to_string(),
     });
 
-    let node_2 = Rc::new(Node {
-        coordinates: (500, 200),
+    let node_2 = Rc::new(RefCell::new(Node {
+        coordinates: (2, 0),
         prev: vec![Connectable::Label(new_label.clone())],
-    });
-    let node_3 = Rc::new(Node {
-        coordinates: (700, 400),
+    }));
+    let node_3 = Rc::new(RefCell::new(Node {
+        coordinates: (4, 1),
         prev: vec![Connectable::Node(node_2.clone())],
-    });
+    }));
 
     let hi_label = Rc::new(Label {
         coordinates: (1000, 500),
@@ -122,7 +131,7 @@ pub fn example() {
     });
 
     let angle = Rc::new(PinPoint {
-        coordinates: (1200, 1000),
+        coordinates: (6, 1),
         prev: Connectable::Label(hi_label.clone()),
     });
 
@@ -147,8 +156,8 @@ pub fn example() {
 
     println!(
         "node:\n\tcircle: {:?}\n\tlines: {:?}",
-        node_1.get_circle(),
-        node_1.get_lines()
+        node_1.borrow().get_circle(),
+        node_1.borrow().get_lines()
     );
     println!(
         "label:\n\tline: {:?}\n\ttext: {:?}",
@@ -157,13 +166,13 @@ pub fn example() {
     );
     println!(
         "node:\n\tcircle: {:?}\n\tlines: {:?}",
-        node_2.get_circle(),
-        node_2.get_lines()
+        node_2.borrow().get_circle(),
+        node_2.borrow().get_lines()
     );
     println!(
         "node:\n\tcircle: {:?}\n\tlines: {:?}",
-        node_3.get_circle(),
-        node_3.get_lines()
+        node_3.borrow().get_circle(),
+        node_3.borrow().get_lines()
     );
     println!(
         "label:\n\tline: {:?}\n\ttext: {:?}",
