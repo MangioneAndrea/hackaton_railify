@@ -1,9 +1,10 @@
-use std::rc::Rc;
-
+use draw::WINDOW_WIDTH;
+use draw::WINDOW_HEIGHT;
 use svg::node::element::Circle;
 use svg::node::element::Element;
 use svg::node::element::Line;
 use svg::node::element::Text;
+use svg::node::element::Group;
 use svg::Document;
 
 use crate::data_structures::{Connectable, Label, Node, PinPoint, SingleLiner};
@@ -76,11 +77,16 @@ pub fn insert_svg(svg_schema: &mut Vec<Element>, new_connectable: Connectable) {
 }
 
 pub fn save_and_draw_svg(svg_schema: &mut Vec<Element>) {
-    let mut document = Document::new().set("viewBox", (0, 0, 3000, 2000)); // TODO set correct size
+    let mut group = Group::new()
+        .set("transform", format!("translate({}, 0) scale(-1, 1)", WINDOW_WIDTH));
 
     for svg_item in svg_schema {
-        document = document.add(svg_item.clone());
+        group = group.add(svg_item.clone());
     }
+
+    let document = Document::new()
+        .set("viewBox", (0, 0, WINDOW_HEIGHT, WINDOW_WIDTH))
+        .add(group);
 
     svg::save("plan.svg", &document).unwrap();
 }
