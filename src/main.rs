@@ -152,6 +152,7 @@ fn main() -> anyhow::Result<()> {
             .collect()
     }
 
+    /*
     let pinpoints: Vec<_> = lines
         .iter()
         .filter_map(|s| match s {
@@ -171,6 +172,7 @@ fn main() -> anyhow::Result<()> {
             _ => None,
         })
         .collect();
+     */
 
     let mut svg_schema: Vec<element::Element> = Vec::new();
 
