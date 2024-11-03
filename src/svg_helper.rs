@@ -78,7 +78,8 @@ pub fn insert_svg(svg_schema: &mut Vec<Element>, new_connectable: Connectable) {
 
 pub fn save_and_draw_svg(svg_schema: &mut Vec<Element>) {
     let mut group = Group::new()
-        .set("transform", format!("translate({}, 0) scale(-1, 1)", WINDOW_WIDTH));
+        .set("transform", format!("scale(1, -1) translate(0, -{})", WINDOW_HEIGHT));
+
 
     for svg_item in svg_schema {
         group = group.add(svg_item.clone());

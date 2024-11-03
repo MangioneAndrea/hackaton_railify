@@ -1,5 +1,5 @@
 <svg viewBox="0 0 800 800" xmlns="http://www.w3.org/2000/svg">
-<g transform="translate(800, 0) scale(-1, 1)">
+<g transform="scale(1, -1) translate(0, -800)">
 <circle cx="400" cy="58" fill="blue" r="8"/>
 <line stroke="black" x1="400" x2="373" y1="58" y2="101"/>
 <line stroke="black" x1="400" x2="373" y1="58" y2="101"/>
