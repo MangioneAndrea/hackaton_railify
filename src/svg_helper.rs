@@ -37,7 +37,7 @@ pub fn insert_svg(svg_schema: &mut Vec<Element>, new_connectable: Connectable) {
                 .set("fill", "blue")
                 .into();
             svg_schema.push(path);
-            let lines = new_node.get_lines();
+            let lines = new_node.borrow().get_lines();
 
             for line_coordinates in lines {
                 let out_line = Line::new()
@@ -82,5 +82,5 @@ pub fn save_and_draw_svg(svg_schema: &mut Vec<Element>) {
         document = document.add(svg_item.clone());
     }
 
-    svg::save("nicola test.svg", &document).unwrap();
+    svg::save("plan.svg", &document).unwrap();
 }

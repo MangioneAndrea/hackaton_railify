@@ -21,11 +21,7 @@ pub trait SingleLiner {
 }
 
 pub enum Connectable {
-<<<<<<< HEAD
-    Node(Rc<Node>),
-=======
     Node(Rc<RefCell<Node>>),
->>>>>>> master
     Label(Rc<Label>),
     PinPoint(Rc<PinPoint>),
 }
@@ -41,13 +37,8 @@ impl Connectable {
 }
 
 pub struct PinPoint {
-<<<<<<< HEAD
-    coordinates: (i32, i32),
-    prev: Connectable,
-=======
     pub coordinates: (i32, i32),
     pub prev: Connectable,
->>>>>>> master
 }
 
 impl SingleLiner for PinPoint {
@@ -105,7 +96,7 @@ impl Node {
 
 pub fn example() {
     let node_1 = Rc::new(RefCell::new(Node {
-        coordinates: (0, 0),
+        coordinates: (100, 100),
         prev: Vec::new(),
     }));
 
@@ -116,11 +107,11 @@ pub fn example() {
     });
 
     let node_2 = Rc::new(RefCell::new(Node {
-        coordinates: (2, 0),
+        coordinates: (400, 300),
         prev: vec![Connectable::Label(new_label.clone())],
     }));
     let node_3 = Rc::new(RefCell::new(Node {
-        coordinates: (4, 1),
+        coordinates: (600, 400),
         prev: vec![Connectable::Node(node_2.clone())],
     }));
 
@@ -131,7 +122,7 @@ pub fn example() {
     });
 
     let angle = Rc::new(PinPoint {
-        coordinates: (6, 1),
+        coordinates: (1400, 500),
         prev: Connectable::Label(hi_label.clone()),
     });
 
